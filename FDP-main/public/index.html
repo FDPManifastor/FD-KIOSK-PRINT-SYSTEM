@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="nl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FD Printing Center - Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing: border-box; }
+    .copy-card {
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+    .copy-card:hover {
+      transform: translateY(-4px);
+      border-color: #dc2626;
+      box-shadow: 0 10px 25px rgba(220,38,38,0.2);
+    }
+    .copy-card:active { transform: translateY(0); }
+    .hidden { display: none !important; }
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active {
+      border-bottom-color: #dc2626;
+      color: #dc2626;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-gray-50 font-sans">
+  <div class="min-h-full flex flex-col">
+
+   <header class="bg-red-600 text-white text-center py-6 px-4">
+    <h1 class="text-4xl md:text-5xl font-black uppercase tracking-wider mb-1">FD Printing Center</h1>
+    <p class="text-red-100 text-lg">Bestandsmonitoring</p>
+   </header>
+
+   <main class="flex-1 flex flex-col p-6">
+    <div class="max-w-6xl mx-auto w-full">
+     <!-- Tab Navigation -->
+     <div class="flex gap-4 border-b-2 border-gray-300 mb-8 overflow-x-auto">
+      <button class="tab-btn active px-6 py-3 text-lg font-semibold text-gray-700" data-tab="amsterdam">
+       📍 Amsterdam
+      </button>
+      <button class="tab-btn px-6 py-3 text-lg font-semibold text-gray-700" data-tab="utrecht">
+       📍 Utrecht
+      </button>
+      <button class="tab-btn px-6 py-3 text-lg font-semibold text-gray-700" data-tab="hoogvliet">
+       📍 Hoogvliet
+      </button>
+      <button class="tab-btn px-6 py-3 text-lg font-semibold text-gray-700" data-tab="test">
+       🧪 Test
+      </button>
+     </div>
+
+     <!-- Amsterdam Tab -->
+     <div id="amsterdam" class="tab-content active">
+      <h2 class="text-3xl font-black text-gray-800 mb-6">Amsterdam - COPY Stations</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+       <a href="/files_copy1.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 1</span>
+       </a>
+       <a href="/files_copy2.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 2</span>
+       </a>
+       <a href="/files_copy3.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 3</span>
+       </a>
+       <a href="/files_copy4.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 4</span>
+       </a>
+      </div>
+     </div>
+
+     <!-- Utrecht Tab -->
+     <div id="utrecht" class="tab-content">
+      <h2 class="text-3xl font-black text-gray-800 mb-6">Utrecht - COPY Stations</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+       <a href="/files_utrecht_copy1.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 1</span>
+       </a>
+       <a href="/files_utrecht_copy2.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 2</span>
+       </a>
+       <a href="/files_utrecht_copy3.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 3</span>
+       </a>
+      </div>
+     </div>
+
+     <!-- Hoogvliet Tab -->
+     <div id="hoogvliet" class="tab-content">
+      <h2 class="text-3xl font-black text-gray-800 mb-6">Hoogvliet - COPY Stations</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <a href="/files_hoogvliet_copy1.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 1</span>
+       </a>
+       <a href="/files_hoogvliet_copy2.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">COPY 2</span>
+       </a>
+      </div>
+     </div>
+
+     <!-- Test Tab -->
+     <div id="test" class="tab-content">
+      <h2 class="text-3xl font-black text-gray-800 mb-6">🧪 Test Environment</h2>
+      <div class="grid grid-cols-1 gap-4">
+       <a href="/files_test_copy1.html" class="copy-card bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg cursor-pointer no-underline">
+        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+         </svg>
+        </div>
+        <span class="text-2xl font-black text-gray-800">TEST COPY 1</span>
+       </a>
+      </div>
+     </div>
+    </div>
+   </main>
+
+   <footer class="bg-gray-800 text-white text-center py-4 px-4">
+    <p class="text-sm">© 2024 FD Printing Center - Selfservice Printing</p>
+   </footer>
+
+  </div>
+
+  <script>
+   document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+     const tabName = btn.getAttribute('data-tab');
+
+     // Hide all tabs
+     document.querySelectorAll('.tab-content').forEach(el => {
+      el.classList.remove('active');
+     });
+
+     // Deactivate all buttons
+     document.querySelectorAll('.tab-btn').forEach(el => {
+      el.classList.remove('active');
+     });
+
+     // Show selected tab
+     document.getElementById(tabName).classList.add('active');
+     btn.classList.add('active');
+    });
+   });
+  </script>
+ </body>
+</html>

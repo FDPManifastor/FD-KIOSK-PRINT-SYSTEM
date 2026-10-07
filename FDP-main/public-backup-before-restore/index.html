@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="nl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FD Printing Center - Kies uw printer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing: border-box; }
+    .copy-card {
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+    .copy-card:hover {
+      transform: translateY(-4px);
+      border-color: #dc2626;
+      box-shadow: 0 10px 25px rgba(220,38,38,0.2);
+    }
+    .copy-card:active { transform: translateY(0); }
+  </style>
+ </head>
+ <body class="h-full bg-gray-50 font-sans">
+  <div class="min-h-full flex flex-col">
+
+   <header class="bg-red-600 text-white text-center py-6 px-4">
+    <h1 class="text-2xl font-bold mb-1">FD Printing Center</h1>
+    <p class="text-red-100 text-lg">Selfservice System</p>
+   </header>
+
+   <main class="flex-1 flex flex-col items-center justify-center p-6">
+    <h2 class="text-3xl font-black text-gray-800 text-center tracking-wider mb-2">Kies uw printer</h2>
+    <p class="text-gray-500 text-sm mb-10">Selecteer de printer waarvoor u een bestand wilt uploaden</p>
+
+    <div class="grid grid-cols-2 gap-6 w-full max-w-lg">
+
+     <a href="/upload_copy1.html" class="copy-card bg-white rounded-2xl p-8 text-center shadow-md flex flex-col items-center justify-center gap-3 cursor-pointer no-underline">
+      <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+       <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+       </svg>
+      </div>
+      <span class="text-3xl font-black text-gray-800 tracking-wider">COPY 1</span>
+     </a>
+
+     <a href="/upload_copy2.html" class="copy-card bg-white rounded-2xl p-8 text-center shadow-md flex flex-col items-center justify-center gap-3 cursor-pointer no-underline">
+      <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+       <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+       </svg>
+      </div>
+      <span class="text-3xl font-black text-gray-800 tracking-wider">COPY 2</span>
+     </a>
+
+     <a href="/upload_copy3.html" class="copy-card bg-white rounded-2xl p-8 text-center shadow-md flex flex-col items-center justify-center gap-3 cursor-pointer no-underline">
+      <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+       <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+       </svg>
+      </div>
+      <span class="text-3xl font-black text-gray-800 tracking-wider">COPY 3</span>
+     </a>
+
+     <a href="/upload_copy4.html" class="copy-card bg-white rounded-2xl p-8 text-center shadow-md flex flex-col items-center justify-center gap-3 cursor-pointer no-underline">
+      <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+       <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+       </svg>
+      </div>
+      <span class="text-3xl font-black text-gray-800 tracking-wider">COPY 4</span>
+     </a>
+
+    </div>
+   </main>
+
+   <footer class="bg-gray-800 text-white text-center py-4 px-4">
+    <p class="text-sm">© 2024 FD Printing Center - Selfservice Printing</p>
+   </footer>
+
+  </div>
+ </body>
+</html>

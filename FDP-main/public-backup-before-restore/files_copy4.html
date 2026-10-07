@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="nl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FD Printing Center - Bestanden COPY 4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+ </head>
+ <body class="h-full bg-gray-50 font-sans">
+  <div class="min-h-full flex flex-col">
+  <header class="bg-red-600 text-white text-center py-6 px-4 relative">
+   <div class="absolute top-4 right-4"><button id="language-toggle" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded-lg text-sm font-medium"> <span id="current-lang">NL</span> </button></div>
+    <h1 class="text-2xl font-bold mb-1">FD Printing Center</h1>
+    <p class="text-red-100 text-lg"> COPY 4</p>
+   </header>
+
+   <main class="flex-1 p-6">
+    <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+     <section class="bg-white rounded-xl p-6 shadow-md">
+      <h2 class="text-2xl font-black text-gray-800 tracking-wider mb-3">UPLOADS</h2>
+          <p class="text-sm text-gray-500 mb-4">Geuploade bestanden voor COPY 4.</p>
+      <div id="files-status" class="text-sm text-gray-500">Bestanden laden...</div>
+      <ul id="files-list" class="hidden space-y-2"></ul>
+      <button id="refresh-files" class="mt-4 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Ververs lijst</button>
+     </section>
+
+           <section class="bg-white rounded-xl p-6 shadow-md">
+        <h3 class="font-semibold text-gray-800 mb-3">Voorbeeld van geupload bestand</h3>
+        <p class="text-sm text-gray-600 mb-4">Klik op Voorbeeld bij een bestand om hier de inhoud te tonen.</p>
+        <div id="preview-empty" class="text-sm text-gray-500">Nog geen voorbeeld geselecteerd.</div>
+        <div id="preview-content" class="hidden border border-gray-200 rounded-lg p-3 bg-gray-50"></div>
+           </section>
+
+     <section class="lg:col-span-2 bg-white rounded-xl p-6 shadow-md">
+      <h4 id="guide-title" class="font-semibold text-gray-800 mb-4">Handleiding:</h4>
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+       <div class="flex flex-col items-center sm:flex-shrink-0">
+        <img id="qr-image" alt="QR code naar COPY 4 upload pagina" class="w-44 h-44 border border-gray-200 rounded-lg p-2 bg-white mb-3">
+        <p id="scan-upload-text" class="text-sm text-gray-700 font-medium mb-2">Scan en Upload bestand</p>
+        <a id="upload-link" href="/upload_copy4.html" class="text-center text-sm bg-gray-900 hover:bg-black text-white font-semibold py-2 px-3 rounded-lg mb-3 w-full">Open uploadpagina COPY 4</a>
+        <button id="new-session-btn" class="text-sm bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg w-full">Nieuwe sessie</button>
+       </div>
+       <div class="flex-1">
+        <ol class="text-sm text-gray-600 space-y-2">
+         <li id="guide-step-1">1. Scan de QR-code of open de uploadpagina van COPY 4.</li>
+         <li id="guide-step-2">2. Upload jouw bestand vanaf je telefoon, tablet of laptop.</li>
+         <li id="guide-step-3">3. Wacht tot het bestand verschijnt in de lijst met uploads.</li>
+         <li id="guide-step-4">4. Klik op Voorbeeld of Download om het bestand te openen.</li>
+        </ol>
+        <p id="guide-tip" class="text-sm text-gray-600 mt-4"><strong>Tip:</strong> Het is mogelijk om het bestand te renderen naar PDF voordat je het downloadt.</p>
+       </div>
+      </div>
+     </section>
+    </div>
+   </main>
+
+   <footer class="bg-gray-800 text-white text-center py-4 px-4"><p class="text-sm">© 2024 FD Printing Center - Selfservice Printing</p></footer>
+  </div>
+
+  <script>
+   const folderName = 'copy4';
+   const uploadPath = '/upload_copy4.html';
+   const filesStatus = document.getElementById('files-status');
+   const filesList = document.getElementById('files-list');
+   const refreshButton = document.getElementById('refresh-files');
+  const qrImage = document.getElementById('qr-image');
+  const uploadLink = document.getElementById('upload-link');
+  const languageToggle = document.getElementById('language-toggle');
+  const currentLangLabel = document.getElementById('current-lang');
+  const languageKey = 'fdp-lang';
+  let currentLanguage = localStorage.getItem(languageKey) || 'nl';
+    const previewEmpty = document.getElementById('preview-empty');
+     const previewContent = document.getElementById('preview-content');
+
+   const translations = {
+    nl: {
+      langLabel: 'NL',
+      guideTitle: 'Handleiding:',
+      scanUploadText: 'Scan en Upload bestand',
+      uploadLinkText: 'Open uploadpagina COPY 4',
+      newSessionBtn: 'Nieuwe sessie',
+      guideStep1: '1. Scan de QR-code hierboven of open de uploadpagina van COPY 4.',
+      guideStep2: '2. Upload jouw bestand vanaf je telefoon, tablet of laptop.',
+      guideStep3: '3. Wacht tot het bestand hieronder verschijnt in de lijst met uploads.',
+      guideStep4: '4. Klik op Voorbeeld of Download om het bestand te openen.',
+      guideTip: '<strong>Tip:</strong> Het is mogelijk om het bestand te renderen naar PDF voordat je het downloadt.',
+      filesLoading: 'Bestanden laden...',
+      filesEmpty: 'Nog geen bestanden geupload.',
+      filesError: 'Kon bestanden niet laden.',
+      previewLoading: 'Voorbeeld laden...',
+      previewUnsupported: 'Voor dit bestandstype is geen inline voorbeeld. Gebruik Download of Render naar PDF.',
+      previewTextError: 'Kon tekstvoorbeeld niet laden.',
+      deleteBtnLabel: 'Verwijderen',
+      deleteConfirm: 'Weet je zeker dat je dit bestand wilt verwijderen?',
+      deleteError: 'Kon bestand niet verwijderen.'
+    },
+    en: {
+      langLabel: 'EN',
+      guideTitle: 'Instructions:',
+      scanUploadText: 'Scan and Upload file',
+      uploadLinkText: 'Open COPY 4 upload page',
+      newSessionBtn: 'New session',
+      guideStep1: '1. Scan the QR code or open the COPY 4 upload page.',
+      guideStep2: '2. Upload your file from your phone, tablet, or laptop.',
+      guideStep3: '3. Wait until the file appears in the uploads list.',
+      guideStep4: '4. Click Preview or Download to open the file.',
+      guideTip: '<strong>Tip:</strong> You can render the file to PDF before downloading it.',
+      filesLoading: 'Loading files...',
+      filesEmpty: 'No files uploaded yet.',
+      filesError: 'Could not load files.',
+      previewLoading: 'Loading preview...',
+      previewUnsupported: 'Inline preview is not available for this file type. Use Download or Render to PDF.',
+      previewTextError: 'Could not load text preview.',
+      deleteBtnLabel: 'Delete',
+      deleteConfirm: 'Are you sure you want to delete this file?',
+      deleteError: 'Could not delete file.'
+    }
+   };
+
+   function t(key) {
+    return (translations[currentLanguage] && translations[currentLanguage][key]) || translations.nl[key] || key;
+   }
+
+   function applyLanguage() {
+    currentLangLabel.textContent = t('langLabel');
+    document.getElementById('guide-title').textContent = t('guideTitle');
+    document.getElementById('scan-upload-text').textContent = t('scanUploadText');
+    document.getElementById('upload-link').textContent = t('uploadLinkText');
+    document.getElementById('new-session-btn').textContent = t('newSessionBtn');
+    document.getElementById('guide-step-1').textContent = t('guideStep1');
+    document.getElementById('guide-step-2').textContent = t('guideStep2');
+    document.getElementById('guide-step-3').textContent = t('guideStep3');
+    document.getElementById('guide-step-4').textContent = t('guideStep4');
+    document.getElementById('guide-tip').innerHTML = t('guideTip');
+   }
+
+   function escapeHtml(value) {
+    return value
+     .replaceAll('&', '&amp;')
+     .replaceAll('<', '&lt;')
+     .replaceAll('>', '&gt;')
+     .replaceAll('"', '&quot;')
+     .replaceAll("'", '&#039;');
+   }
+
+   function qrProviderUrl(provider, value) {
+    const encoded = encodeURIComponent(value);
+    if (provider === 'local') {
+     return '/qr?size=220&text=' + encoded;
+    }
+    if (provider === 'quickchart') {
+     return 'https://quickchart.io/qr?size=220&text=' + encoded;
+    }
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encoded;
+   }
+
+   function setQrWithFallback(imgElement, value) {
+    let stage = 0;
+    imgElement.onerror = () => {
+     stage += 1;
+     if (stage === 1) {
+      imgElement.src = qrProviderUrl('quickchart', value);
+      return;
+     }
+     if (stage === 2) {
+      imgElement.src = qrProviderUrl('qrserver', value);
+      return;
+     }
+     if (stage > 2) {
+      imgElement.onerror = null;
+      return;
+     }
+    };
+    imgElement.src = qrProviderUrl('local', value);
+   }
+
+   function setQrCode() {
+    const absoluteUploadUrl = window.location.origin + uploadPath;
+    uploadLink.href = absoluteUploadUrl;
+    setQrWithFallback(qrImage, absoluteUploadUrl);
+   }
+
+   async function loadFiles() {
+    filesStatus.classList.remove('hidden');
+    filesStatus.textContent = t('filesLoading');
+    filesList.classList.add('hidden');
+    filesList.innerHTML = '';
+
+    try {
+      const response = await fetch('/files/' + folderName);
+      if (!response.ok) throw new Error('Status ' + response.status);
+      const data = await response.json();
+
+      if (!data.files || data.files.length === 0) {
+        filesStatus.textContent = t('filesEmpty');
+        return;
+      }
+
+      filesStatus.classList.add('hidden');
+      filesList.classList.remove('hidden');
+      filesList.innerHTML = data.files.map(file => {
+        const safeName = escapeHtml(file);
+        const encodedFile = encodeURIComponent(file);
+        return '<li class="bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">'
+         + '<div class="text-sm text-gray-700 break-all mb-2">' + safeName + '</div>'
+         + '<div class="flex flex-wrap gap-2">'
+         + '<a class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md" href="/download/' + folderName + '/' + encodedFile + '">Download</a>'
+         + '<button class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-md" onclick="showPreview(\'' + encodeURIComponent(file) + '\')">Voorbeeld</button>'
+         + '<a class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md" href="/render-pdf/' + folderName + '/' + encodedFile + '">Render naar PDF</a>'         + '<button class="bg-red-800 hover:bg-red-900 text-white text-xs font-semibold px-3 py-1.5 rounded-md" onclick="deleteFile(\'' + encodeURIComponent(file) + '\')" >' + t('deleteBtnLabel') + '</button>'         + '</div>'
+         + '</li>';
+      }).join('');
+    } catch (error) {
+      filesStatus.textContent = t('filesError');
+      console.error('Load files error:', error);
+    }
+   }
+
+   async function showPreview(encodedFileName) {
+    const fileName = decodeURIComponent(encodedFileName);
+    const extension = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+    const fileUrl = '/preview/' + folderName + '/' + encodedFileName;
+
+    previewEmpty.classList.add('hidden');
+    previewContent.classList.remove('hidden');
+    previewContent.innerHTML = '<p class="text-sm text-gray-500">' + t('previewLoading') + '</p>';
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+      previewContent.innerHTML = '<img src="' + fileUrl + '" alt="Voorbeeld" class="w-full max-h-96 object-contain rounded-md bg-white">';
+      return;
+    }
+
+    if (extension === 'pdf') {
+      previewContent.innerHTML = '<iframe src="' + fileUrl + '" class="w-full h-96 rounded-md bg-white"></iframe>';
+      return;
+    }
+
+    if (extension === 'txt') {
+      try {
+        const response = await fetch('/text-preview/' + folderName + '/' + encodedFileName);
+        if (!response.ok) throw new Error('Status ' + response.status);
+        const text = await response.text();
+        previewContent.innerHTML = '<pre class="text-xs text-gray-700 whitespace-pre-wrap break-words">' + escapeHtml(text) + '</pre>';
+      } catch (error) {
+        previewContent.innerHTML = '<p class="text-sm text-red-700">' + t('previewTextError') + '</p>';
+      }
+      return;
+    }
+
+    previewContent.innerHTML = '<p class="text-sm text-gray-700">' + t('previewUnsupported') + '</p>';
+   }
+
+   async function deleteFile(encodedFileName) {
+    if (!confirm(t('deleteConfirm'))) return;
+    try {
+      const response = await fetch('/delete/' + folderName + '/' + encodedFileName, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Status ' + response.status);
+      loadFiles();
+    } catch (error) {
+      alert(t('deleteError'));
+      console.error('Delete error:', error);
+    }
+   }
+
+   async function newSession() {
+    try {
+      await fetch('/delete-all/' + folderName, { method: 'DELETE' });
+    } catch (error) {
+      console.error('Delete all error:', error);
+    }
+    const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const url = window.location.origin + uploadPath + '?session=' + token;
+    uploadLink.href = url;
+    setQrWithFallback(qrImage, url);
+    loadFiles();
+   }
+
+   window.showPreview = showPreview;
+   window.deleteFile = deleteFile;
+
+   document.getElementById('new-session-btn').addEventListener('click', newSession);
+
+  languageToggle.addEventListener('click', () => {
+   currentLanguage = currentLanguage === 'nl' ? 'en' : 'nl';
+   localStorage.setItem(languageKey, currentLanguage);
+   applyLanguage();
+  });
+
+  applyLanguage();
+   refreshButton.addEventListener('click', loadFiles);
+   setQrCode();
+   loadFiles();
+  </script>
+ </body>
+</html>

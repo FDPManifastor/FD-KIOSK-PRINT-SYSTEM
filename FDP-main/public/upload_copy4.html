@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="nl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FD Printing Center - Upload COPY 4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body { box-sizing: border-box; }
+        .upload-area { border: 3px dashed #cbd5e1; transition: all 0.3s ease; }
+        .upload-area:hover { border-color: #dc2626; background-color: #f8fafc; }
+        .upload-area.dragover { border-color: #dc2626; background-color: #fef2f2; }
+        .success-message { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .file-icon { animation: bounce 2s infinite; }
+        @keyframes bounce { 0%,20%,50%,80%,100% { transform: translateY(0);} 40% { transform: translateY(-10px);} 60% { transform: translateY(-5px);} }
+    </style>
+ </head>
+ <body class="h-full bg-gray-50 font-sans">
+  <div class="min-h-full flex flex-col">
+   <header class="bg-red-600 text-white text-center py-6 px-4 relative">
+    <div class="absolute top-4 right-4"><button id="language-toggle" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded-lg text-sm font-medium"> <span id="current-lang">🇳🇱 NL</span> </button></div>
+    <h1 id="company-name" class="text-2xl font-bold mb-1">FD Printing Center</h1>
+    <p id="service-type" class="text-red-100 text-lg">Selfservice System</p>
+   </header>
+   <main class="flex-1 flex flex-col items-center justify-center p-6">
+    <div class="mb-8">
+     <h2 id="printer-id" class="text-6xl font-black text-gray-800 text-center tracking-wider">COPY 4</h2>
+    </div>
+    <div class="w-full max-w-md">
+     <div id="upload-area" class="upload-area bg-white rounded-2xl p-8 text-center shadow-lg">
+      <div class="mb-6">
+       <div class="file-icon mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+       </div>
+       <h3 id="upload-text" class="text-xl font-semibold text-gray-700 mb-2">Upload File</h3>
+    <p id="upload-help-text" class="text-gray-500 text-sm mb-4">Sleep je bestand hierheen of klik om te selecteren</p>
+      </div>
+    <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/*">
+      <button id="upload-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors"> <span id="select-file-text">Selecteer Bestand</span> </button>
+     </div>
+     <div id="success-message" class="hidden success-message mt-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl">
+      <div class="flex items-center">
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg><span id="success-title" class="font-medium">Bestand succesvol geüpload!</span>
+      </div>
+      <p id="success-subtext" class="text-sm mt-1">Je kunt nu je bestand openen en printen vanaf deze computer.</p>
+     </div>
+    <div class="mt-6 bg-white rounded-xl p-6 shadow-md">
+     <h4 id="files-section-title" class="font-semibold text-gray-800 mb-3 flex items-center">
+      <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M6 7V5a2 2 0 012-2h8a2 2 0 012 2v2m-1 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z"></path></svg>
+      Bestanden in COPY 4
+     </h4>
+      <p id="files-section-subtext" class="text-xs text-gray-500 mb-3">Klik op Download om direct jouw bestand op te halen.</p>
+                    <button id="new-session-button" class="w-full mb-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-md">Uploader klaar - start nieuwe sessie</button>
+                    <p id="session-status" class="text-xs text-gray-500 mb-2"></p>
+     <div id="files-status" class="text-sm text-gray-500">Bestanden laden...</div>
+     <ul id="files-list" class="hidden space-y-2"></ul>
+    </div>
+    </div>
+   </main>
+   <footer class="bg-gray-800 text-white text-center py-4 px-4"><p class="text-sm">© 2024 FD Printing Center - Selfservice Printing</p></footer>
+  </div>
+  <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadButton = document.getElementById('upload-button');
+        const successMessage = document.getElementById('success-message');
+        const filesStatus = document.getElementById('files-status');
+        const filesList = document.getElementById('files-list');
+        const newSessionButton = document.getElementById('new-session-button');
+        const sessionStatus = document.getElementById('session-status');
+        const languageToggle = document.getElementById('language-toggle');
+        const currentLangLabel = document.getElementById('current-lang');
+        const supportedFileExtensions = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+        const pageReloadDelayMs = 2500;
+        const uploadRequestTimeoutMs = 120000;
+        const folderName = 'copy4';
+        const initialAccessCode = new URLSearchParams(window.location.search).get('access') || '';
+        const uploaderTokenKey = 'fdp-uploader-copy4';
+        const languageKey = 'fdp-lang';
+        let currentLanguage = localStorage.getItem(languageKey) || 'nl';
+        let currentAccessCode = initialAccessCode;
+        let ensureSessionOwnerPromise = null;
+
+        const translations = {
+            nl: {
+                langLabel: 'NL',
+                uploadText: 'Upload File',
+                uploadHelpText: 'Sleep je bestand hierheen of klik om te selecteren',
+                selectFileText: 'Selecteer Bestand',
+                successTitle: 'Bestand succesvol geupload!',
+                successSubtext: 'Je kunt nu je bestand openen en printen vanaf deze computer.',
+                filesSectionTitle: 'Bestanden in COPY 4',
+                filesSectionSubtext: 'Klik op Download om direct jouw bestand op te halen.',
+                newSessionButton: 'Uploader klaar - start nieuwe sessie',
+                guideTitle: 'Handleiding:',
+                guideStep1: 'Gebruik de upload knop of de E-mail optie hierboven om je bestand te sturen.',
+                guideStep2: 'Ga naar het Bureaublad van deze computer.',
+                guideStep3: 'Open de map genaamd COPY 4.',
+                guideStep4: 'Dubbelklik op jouw bestand.',
+                guideStep5: 'Druk op Ctrl + P om af te drukken.',
+                filesLoading: 'Bestanden laden...',
+                filesEmpty: 'Nog geen bestanden geupload.',
+                filesLoadError: 'Kon bestanden niet laden.',
+                uploadingFile: 'Bestand wordt geupload...',
+                uploadNoFile: 'Geen bestand geselecteerd.',
+                unsupportedFileType: 'Unsupported file type. Ondersteunde bestanden: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, WEBP, HEIC, HEIF.',
+                uploadError: 'Fout bij uploaden',
+                uploadFetchError: 'Fout',
+                uploadSuccessStatus: 'Upload voltooid. De pagina wordt zo vernieuwd.',
+                newSessionConfirm: 'Uploader klaar? Start een nieuwe sessie voor de volgende gebruiker.',
+                newSessionStarting: 'Nieuwe sessie wordt gestart...',
+                newSessionActive: 'Nieuwe sessie is actief. Je kunt nu opnieuw uploaden.',
+                newSessionFail: 'Nieuwe sessie starten mislukt.'
+            },
+            en: {
+                langLabel: 'EN',
+                uploadText: 'Upload File',
+                uploadHelpText: 'Drag your file here or click to select',
+                selectFileText: 'Select File',
+                successTitle: 'File uploaded successfully!',
+                successSubtext: 'You can now open and print your file from this computer.',
+                filesSectionTitle: 'Files in COPY 4',
+                filesSectionSubtext: 'Click Download to open your file directly.',
+                newSessionButton: 'Uploader done - start new session',
+                guideTitle: 'Instructions:',
+                guideStep1: 'Use the upload button or email option above to send your file.',
+                guideStep2: 'Go to the desktop of this computer.',
+                guideStep3: 'Open the folder named COPY 4.',
+                guideStep4: 'Double-click your file.',
+                guideStep5: 'Press Ctrl + P to print.',
+                filesLoading: 'Loading files...',
+                filesEmpty: 'No files uploaded yet.',
+                filesLoadError: 'Could not load files.',
+                uploadingFile: 'Uploading file...',
+                uploadNoFile: 'No file selected.',
+                unsupportedFileType: 'Unsupported file type. Supported files: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, WEBP, HEIC, HEIF.',
+                uploadError: 'Upload failed',
+                uploadFetchError: 'Error',
+                uploadSuccessStatus: 'Upload complete. Reloading shortly.',
+                newSessionConfirm: 'Uploader done? Start a new session for the next user.',
+                newSessionStarting: 'Starting new session...',
+                newSessionActive: 'New session is active. You can upload again.',
+                newSessionFail: 'Failed to start new session.'
+            }
+        };
+
+        function t(key) {
+            return (translations[currentLanguage] && translations[currentLanguage][key]) || translations.nl[key] || key;
+        }
+
+        function applyLanguage() {
+            currentLangLabel.textContent = t('langLabel');
+            document.getElementById('upload-text').textContent = t('uploadText');
+            document.getElementById('upload-help-text').textContent = t('uploadHelpText');
+            document.getElementById('select-file-text').textContent = t('selectFileText');
+            document.getElementById('success-title').textContent = t('successTitle');
+            document.getElementById('success-subtext').textContent = t('successSubtext');
+            document.getElementById('files-section-title').lastChild.textContent = ' ' + t('filesSectionTitle');
+            document.getElementById('files-section-subtext').textContent = t('filesSectionSubtext');
+            newSessionButton.textContent = t('newSessionButton');
+            const guideTitle = document.getElementById('guide-title');
+            if (guideTitle && guideTitle.lastChild) {
+                guideTitle.lastChild.textContent = ' ' + t('guideTitle');
+            }
+            const guideStep1 = document.getElementById('guide-step-1');
+            if (guideStep1) guideStep1.textContent = t('guideStep1');
+            const guideStep2 = document.getElementById('guide-step-2');
+            if (guideStep2) guideStep2.textContent = t('guideStep2');
+            const guideStep3 = document.getElementById('guide-step-3');
+            if (guideStep3) guideStep3.textContent = t('guideStep3');
+            const guideStep4 = document.getElementById('guide-step-4');
+            if (guideStep4) guideStep4.textContent = t('guideStep4');
+            const guideStep5 = document.getElementById('guide-step-5');
+            if (guideStep5) guideStep5.textContent = t('guideStep5');
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function getFileExtension(fileName) {
+            const lastDotIndex = (fileName || '').lastIndexOf('.');
+            return lastDotIndex >= 0 ? fileName.slice(lastDotIndex).toLowerCase() : '';
+        }
+
+        function isSupportedSelectedFile(file) {
+            return supportedFileExtensions.includes(getFileExtension(file && file.name));
+        }
+
+        async function extractUploadError(response) {
+            try {
+                const data = await response.json();
+                if (data && typeof data.error === 'string' && data.error.trim()) return data.error;
+            } catch (error) {
+                // Ignore JSON parse failures and fall back to plain text.
+            }
+
+            try {
+                const text = await response.text();
+                if (text && text.trim()) return text.trim();
+            } catch (error) {
+                // Ignore text parse failures and fall back to a generic error.
+            }
+
+            return t('uploadError') + ': ' + response.status;
+        }
+
+        function getUploaderToken() {
+            let token = localStorage.getItem(uploaderTokenKey);
+            if (token) return token;
+
+            if (window.crypto && window.crypto.randomUUID) {
+                token = window.crypto.randomUUID() + '-' + Date.now();
+            } else {
+                token = 'tok-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+            }
+
+            localStorage.setItem(uploaderTokenKey, token);
+            return token;
+        }
+
+        function accessQuery() {
+            return currentAccessCode ? '?access=' + encodeURIComponent(currentAccessCode) : '';
+        }
+
+        function getUploadEndpoint() {
+            return '/upload_copy4' + accessQuery();
+        }
+
+        function secureHeaders() {
+            if (currentAccessCode) return {};
+            return { 'x-uploader-token': getUploaderToken() };
+        }
+
+        async function ensureSessionOwner() {
+            if (currentAccessCode) return;
+            if (ensureSessionOwnerPromise) {
+                await ensureSessionOwnerPromise;
+                return;
+            }
+
+            ensureSessionOwnerPromise = (async () => {
+                const response = await fetch('/secure/start-session/' + folderName, {
+                    method: 'POST',
+                    headers: { 'x-uploader-token': getUploaderToken() }
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || ('Status ' + response.status));
+                }
+            })();
+
+            try {
+                await ensureSessionOwnerPromise;
+            } finally {
+                ensureSessionOwnerPromise = null;
+            }
+        }
+
+        async function loadFiles() {
+            console.log('loadFiles() called, token:', getUploaderToken()?.substring(0, 10) + '...');
+            filesStatus.classList.remove('hidden');
+            filesStatus.textContent = t('filesLoading');
+            filesList.classList.add('hidden');
+            filesList.innerHTML = '';
+
+            try {
+                await ensureSessionOwner();
+                console.log('Fetching files for folder:', folderName);
+                const response = await fetch('/secure/files/' + folderName + accessQuery(), {
+                    headers: secureHeaders()
+                });
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error('Status ' + response.status + ': ' + (err.error || 'Unknown error'));
+                }
+                const data = await response.json();
+                console.log('Files received:', data.files);
+
+                if (!data.files || data.files.length === 0) {
+                    filesStatus.textContent = t('filesEmpty');
+                    console.log('No files found');
+                    return;
+                }
+
+                console.log('Rendering', data.files.length, 'files');
+                filesStatus.classList.add('hidden');
+                filesList.classList.remove('hidden');
+                filesList.innerHTML = data.files.map(file => {
+                    const safeName = escapeHtml(file);
+                    const encodedFile = encodeURIComponent(file);
+                    return '<li class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">'
+                        + '<span class="text-sm text-gray-700 break-all">' + safeName + '</span>'
+                        + '<a class="shrink-0 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md" href="/secure/download/' + folderName + '/' + encodedFile + accessQuery() + '">Download</a>'
+                        + '</li>';
+                }).join('');
+            } catch (error) {
+                filesStatus.textContent = t('filesLoadError');
+                console.error('Load files error:', error);
+            }
+        }
+
+        function setSessionStatus(message, isError = false) {
+            sessionStatus.textContent = message;
+            sessionStatus.className = isError
+                ? 'text-xs text-red-600 mb-2'
+                : 'text-xs text-green-700 mb-2';
+        }
+
+        async function startNewSession() {
+            const confirmed = window.confirm(t('newSessionConfirm'));
+            if (!confirmed) return;
+            filesList.classList.add('hidden');
+            filesList.innerHTML = '';
+            filesStatus.classList.remove('hidden');
+            filesStatus.textContent = t('newSessionStarting');
+
+            try {
+                const deleteResponse = await fetch('/secure/delete-all/' + folderName + accessQuery(), {
+                    method: 'DELETE',
+                    headers: secureHeaders()
+                });
+
+                if (!deleteResponse.ok) {
+                    const err = await deleteResponse.json().catch(() => ({}));
+                    throw new Error(err.error || ('Status ' + deleteResponse.status));
+                }
+
+                localStorage.removeItem(uploaderTokenKey);
+                currentAccessCode = '';
+
+                const startSessionResponse = await fetch('/secure/start-session/' + folderName, {
+                    method: 'POST',
+                    headers: { 'x-uploader-token': getUploaderToken() }
+                });
+
+                if (!startSessionResponse.ok) {
+                    const err = await startSessionResponse.json().catch(() => ({}));
+                    throw new Error(err.error || ('Status ' + startSessionResponse.status));
+                }
+
+                await loadFiles();
+                setSessionStatus(t('newSessionActive'));
+            } catch (error) {
+                console.error('Start new session error:', error);
+                setSessionStatus(t('newSessionFail'), true);
+            }
+        }
+
+        // Prevent double-click triggering
+        uploadButton.addEventListener('click', (e) => { 
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInput.click(); 
+        });
+        
+        uploadArea.addEventListener('click', (e) => { 
+            if (e.target === fileInput) return;
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click(); 
+        });
+
+        uploadArea.addEventListener('dragover', (e) => { 
+            e.preventDefault(); 
+            e.stopPropagation();
+            uploadArea.classList.add('dragover'); 
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => { 
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover'); 
+        });
+        
+        uploadArea.addEventListener('drop', (e) => { 
+            e.preventDefault(); 
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover'); 
+            const files = e.dataTransfer.files; 
+            if (files.length) handleFileUpload(files); 
+        });
+
+        fileInput.addEventListener('change', (e) => { 
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target.files.length) handleFileUpload(e.target.files); 
+        });
+
+        async function handleFileUpload(files) {
+            const selectedFiles = Array.from(files || []).filter(Boolean);
+
+            if (!selectedFiles.length) {
+                setSessionStatus(t('uploadNoFile'), true);
+                return;
+            }
+
+            const unsupportedFile = selectedFiles.find((file) => !isSupportedSelectedFile(file));
+            if (unsupportedFile) {
+                setSessionStatus(t('unsupportedFileType') + ' (' + unsupportedFile.name + ')', true);
+                return;
+            }
+
+            console.log('Uploading files:', selectedFiles.map((file) => file.name));
+            const formData = new FormData();
+            selectedFiles.forEach((file) => {
+                formData.append('mijnBestand', file);
+            });
+            successMessage.classList.add('hidden');
+            setSessionStatus(t('uploadingFile'));
+            uploadButton.disabled = true;
+            fileInput.disabled = true;
+
+            const abortController = new AbortController();
+            const timeoutId = window.setTimeout(() => abortController.abort(), uploadRequestTimeoutMs);
+
+            try {
+                await ensureSessionOwner();
+
+                const res = await fetch(getUploadEndpoint(), {
+                    method: 'POST',
+                    body: formData,
+                    headers: secureHeaders(),
+                    signal: abortController.signal
+                });
+
+                console.log('Response status:', res.status);
+                if (res.status === 200) {
+                    successMessage.classList.remove('hidden');
+                    fileInput.value = '';
+                    uploadArea.classList.remove('dragover');
+                    setSessionStatus(t('uploadSuccessStatus') + ' (' + selectedFiles.length + ')');
+                    await loadFiles();
+                } else {
+                    setSessionStatus(await extractUploadError(res), true);
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+                if (err && err.name === 'AbortError') {
+                    setSessionStatus(t('uploadFetchError') + ': timeout, probeer minder of kleinere bestanden.', true);
+                } else {
+                    setSessionStatus(t('uploadFetchError') + ': ' + err.message, true);
+                }
+            } finally {
+                window.clearTimeout(timeoutId);
+                uploadButton.disabled = false;
+                fileInput.disabled = false;
+            }
+        }
+
+        languageToggle.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'nl' ? 'en' : 'nl';
+            localStorage.setItem(languageKey, currentLanguage);
+            applyLanguage();
+            loadFiles();
+        });
+
+        applyLanguage();
+        newSessionButton.addEventListener('click', startNewSession);
+        loadFiles();
+  </script>
+ </body>
+</html>

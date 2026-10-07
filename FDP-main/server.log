@@ -1,0 +1,8 @@
+
+> mijn-express-app@1.0.0 start
+> node index.js
+
+Express-server luistert op http://localhost:3000
+Ga naar http://localhost:3000/upload.html om een bestand te uploaden.
+COPY1 ontvangen: uploads/copy1/mijnBestand-1763653193412.png
+COPY1 ontvangen: uploads/copy1/mijnBestand-1763653239192.png

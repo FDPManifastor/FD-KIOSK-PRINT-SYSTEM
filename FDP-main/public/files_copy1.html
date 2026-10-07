@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="nl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FD Printing Center - Bestanden TEST COPY 1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   :root {
+    --brand: 220 38 38;
+    --ink: 23 23 23;
+   }
+
+   body {
+    font-family: 'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 8% 10%, rgba(248, 113, 113, 0.20), transparent 36%),
+      radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.80), transparent 34%),
+      radial-gradient(circle at 78% 78%, rgba(252, 165, 165, 0.24), transparent 38%),
+      linear-gradient(165deg, #f5f6f8 0%, #eceff3 45%, #f8f9fb 100%);
+    color: rgb(var(--ink));
+   }
+
+   .dashboard-shell {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+   }
+
+   .saas-card {
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08), 0 10px 20px rgba(15, 23, 42, 0.06);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(250, 251, 255, 0.9));
+   }
+
+   .soft-btn {
+    border-radius: 999px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+   }
+
+   .soft-btn:hover {
+    transform: translateY(-1px);
+   }
+
+   @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.65); }
+   }
+
+   .live-dot {
+    animation: pulse-dot 1.8s ease-in-out infinite;
+   }
+
+   @keyframes new-file-flash {
+    0% { background-color: rgba(254, 226, 226, 0.9); border-color: rgba(220, 38, 38, 0.4); }
+    100% { background-color: rgba(255, 255, 255, 0.95); border-color: rgb(228, 228, 231); }
+   }
+
+   .new-file-highlight {
+    animation: new-file-flash 2.5s ease-out forwards;
+   }
+
+  .flyer-prijs-button,
+  .modal-content {
+   font-family: 'Montserrat', sans-serif;
+   -webkit-font-smoothing: antialiased;
+  }
+
+  .flyer-prijs-button {
+    background-color: #16A34A;
+   color: #fff;
+   border: none;
+   padding: 14px 30px;
+   font-size: 16px;
+   font-weight: 700;
+   border-radius: 50px;
+   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+   display: inline-flex;
+   align-items: center;
+  justify-content: center;
+  }
+
+  .flyer-prijs-button:hover {
+   transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(22, 163, 74, 0.4);
+  }
+
+  .modal {
+   display: none;
+   position: fixed;
+   z-index: 99999;
+   left: 0;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   background-color: rgba(15, 15, 15, 0.5);
+   backdrop-filter: blur(6px);
+  }
+
+  .modal.is-open {
+   display: block;
+  }
+
+  .modal-content {
+   background-color: #ffffff;
+   margin: 3% auto;
+   padding: 35px;
+   border-radius: 20px;
+   width: 92%;
+   max-width: 1150px;
+   max-height: 85vh;
+   overflow-y: auto;
+   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+   position: relative;
+   animation: cloudFlyIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes cloudFlyIn {
+   from { transform: translateY(30px); opacity: 0; }
+   to { transform: translateY(0); opacity: 1; }
+  }
+
+  .close-btn {
+   position: absolute;
+   right: 25px;
+   top: 20px;
+   color: #ccc;
+   font-size: 35px;
+   font-weight: bold;
+   cursor: pointer;
+   transition: color 0.2s;
+   z-index: 10;
+   line-height: 1;
+   background: transparent;
+   border: 0;
+  }
+
+  .close-btn:hover {
+   color: #E52421;
+  }
+
+  .flyer-header {
+   position: relative;
+   margin-bottom: 30px;
+    border-bottom: 4px solid #E52421;
+   padding-bottom: 12px;
+  }
+
+  .flyer-header h1 {
+   color: #E52421;
+   font-weight: 800;
+   font-size: 30px;
+   margin: 0 0 4px 0;
+   text-transform: uppercase;
+  }
+
+  .flyer-sub-groen {
+    color: #B51A17;
+   font-weight: 700;
+   font-size: 15px;
+   margin: 0;
+  }
+
+  .flyer-grid {
+   display: grid;
+   grid-template-columns: repeat(12, 1fr);
+   gap: 20px;
+  }
+
+  .flyer-card {
+   grid-column: span 4;
+   background: #fff;
+   border-radius: 8px;
+   overflow: hidden;
+   border: 1px solid #EAEAEA;
+   display: flex;
+   flex-direction: column;
+  }
+
+  .flyer-card.groen-accent .card-header { background-color: #16A34A; }
+  .flyer-card.rood-accent .card-header { background-color: #B51A17; }
+  .flyer-card.hele-breedte { grid-column: span 12; }
+
+  .card-header {
+   background-color: #E52421;
+   color: #fff;
+   padding: 10px 15px;
+   font-weight: 700;
+   font-size: 15px;
+  }
+
+  .subheader-text {
+   display: block;
+   font-size: 11px;
+   font-weight: 400;
+   opacity: 0.85;
+   margin-top: 2px;
+  }
+
+  .flyer-table {
+   width: 100%;
+   border-collapse: collapse;
+   flex-grow: 1;
+  }
+
+  .flyer-table th,
+  .flyer-table td {
+   padding: 9px 15px;
+   font-size: 13px;
+   text-align: left;
+   border-bottom: 1px solid #F3F3F3;
+   vertical-align: top;
+  }
+
+  .flyer-table th {
+   background-color: #F9F9F9;
+   color: #666;
+   font-weight: 700;
+   font-size: 11px;
+   text-transform: uppercase;
+  }
+
+  .flyer-table tr:nth-child(even) td { background-color: #FAFAFA; }
+
+  .flyer-table .prijs {
+   text-align: right;
+   font-weight: 700;
+   color: #111;
+   width: 85px;
+   white-space: nowrap;
+  }
+
+  .tabel-voetnoot {
+   margin: 0;
+   padding: 8px 15px;
+   background: #F4F4F4;
+   font-size: 11px;
+   color: #666;
+   font-style: italic;
+  }
+
+  .flyer-table small { color: #888; font-weight: 400; font-size: 11px; }
+
+  .upload-item {
+   position: relative;
+   overflow: visible;
+  }
+
+  .file-info {
+   min-width: 0;
+   display: flex;
+   align-items: flex-start;
+   gap: 0.55rem;
+  }
+
+  .file-name {
+   font-size: 12px;
+   color: #27272a;
+   font-weight: 700;
+   line-height: 1.35;
+   word-break: break-word;
+  }
+
+  .preview-trigger-icon {
+   width: 1.75rem;
+   height: 1.75rem;
+   min-width: 1.75rem;
+   border-radius: 999px;
+   border: 1px solid rgba(220, 38, 38, 0.22);
+   background: linear-gradient(165deg, #ffffff, #fff1f1);
+   color: #b91c1c;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   box-shadow: 0 8px 18px rgba(185, 28, 28, 0.14);
+   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  }
+
+  .upload-item:hover .preview-trigger-icon,
+  .preview-trigger-icon:hover,
+  .preview-trigger-icon:focus-visible {
+   transform: scale(1.06);
+   border-color: rgba(220, 38, 38, 0.55);
+   box-shadow: 0 14px 26px rgba(185, 28, 28, 0.2);
+   outline: none;
+  }
+
+  .preview-trigger-icon svg {
+   width: 14px;
+   height: 14px;
+   display: block;
+  }
+
+  .file-preview-popover {
+   --preview-x: 0px;
+   --preview-y: 0px;
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: min(360px, calc(100vw - 24px));
+   min-height: 210px;
+   max-height: 270px;
+   border-radius: 24px;
+   border: 1px solid rgba(255, 255, 255, 0.72);
+   background: linear-gradient(170deg, rgba(255, 255, 255, 0.98), rgba(249, 250, 251, 0.95));
+   box-shadow: 0 30px 50px rgba(15, 23, 42, 0.18), 0 14px 26px rgba(15, 23, 42, 0.12);
+   backdrop-filter: blur(10px);
+   -webkit-backdrop-filter: blur(10px);
+   overflow: hidden;
+   pointer-events: none;
+   opacity: 0;
+   transform: translate3d(var(--preview-x), var(--preview-y), 0) scale(0.92);
+   transform-origin: top left;
+   transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+   z-index: 9998;
+  }
+
+  .file-preview-popover.is-visible {
+   opacity: 1;
+   transform: translate3d(var(--preview-x), var(--preview-y), 0) scale(1);
+  }
+
+  .preview-loading-placeholder,
+  .preview-unsupported {
+   min-height: 210px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   text-align: center;
+   padding: 16px;
+   color: #52525b;
+   font-size: 12px;
+   font-weight: 700;
+  }
+
+  .preview-media,
+  .preview-pdf {
+   width: 100%;
+   height: 232px;
+   display: block;
+   border: 0;
+   background: #fff;
+  }
+
+  .preview-media {
+   object-fit: cover;
+  }
+
+  .preview-text {
+   max-height: 232px;
+   margin: 0;
+   padding: 14px 16px;
+   overflow: auto;
+   white-space: pre-wrap;
+   word-break: break-word;
+   font-size: 11px;
+   line-height: 1.45;
+   color: #3f3f46;
+   background: #fff;
+  }
+
+  .file-action-btn {
+   display: inline-flex;
+   align-items: center;
+    gap: 0.22rem;
+    font-size: 10px;
+    line-height: 1.1;
+    padding: 0.28rem 0.42rem;
+    white-space: nowrap;
+    flex: 0 0 auto;
+   transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+    .file-actions-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.24rem;
+    overflow-x: auto;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    }
+
+    .file-actions-row::-webkit-scrollbar {
+    display: none;
+    }
+
+  .file-action-btn:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+  }
+
+  .file-action-btn .action-icon {
+    width: 10px;
+    height: 10px;
+   display: inline-block;
+    flex: 0 0 10px;
+  }
+
+  .file-action-btn .action-icon svg {
+   width: 100%;
+   height: 100%;
+   display: block;
+  }
+
+  .action-label-short {
+   display: none;
+  }
+
+  @media (max-width: 640px) {
+   .action-label-full {
+    display: none;
+   }
+
+   .action-label-short {
+    display: inline;
+   }
+
+   .file-action-btn {
+    font-size: 9px;
+    padding: 0.22rem 0.34rem;
+    gap: 0.14rem;
+   }
+
+   .file-action-btn .action-icon {
+    display: none;
+   }
+  }
+
+  .flyer-footer {
+   margin-top: 35px;
+   padding-top: 20px;
+   border-top: 2px dashed #EAEAEA;
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 20px;
+   font-size: 12px;
+  }
+
+  .fout-afdruk { color: #CC0000; font-style: italic; margin-top: 12px !important; }
+  .footer-rechts p { margin: 4px 0; font-weight: 600; color: #444; text-align: right; }
+
+  .footer-rechts p.drukmelding {
+   color: #B51A17;
+  }
+
+  @media (max-width: 900px) {
+   .flyer-card { grid-column: span 6; }
+   .footer-rechts p { text-align: left; }
+  }
+
+  @media (max-width: 600px) {
+   .flyer-card,
+   .flyer-card.hele-breedte { grid-column: span 12; }
+   .flyer-footer { grid-template-columns: 1fr; }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+   .file-preview-popover {
+    display: none !important;
+   }
+  }
+  </style>
+ </head>
+ <body class="h-full text-zinc-900">
+  <div class="fixed top-3 right-3 z-50 rounded-full border border-zinc-800/20 bg-zinc-900/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-white shadow-lg">TEST MODE</div>
+  <div class="min-h-full relative overflow-x-hidden">
+   <div class="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-red-300/30 blur-3xl"></div>
+   <div class="pointer-events-none absolute top-32 -right-20 h-96 w-96 rounded-full bg-white/70 blur-3xl"></div>
+
+   <div class="dashboard-shell min-h-full flex flex-col">
+    <header class="px-4 md:px-8 pt-4 md:pt-6 pb-3">
+     <div class="max-w-7xl mx-auto saas-card bg-gradient-to-r from-red-800 via-red-600 to-red-500 text-white px-6 md:px-10 py-5 md:py-6 relative overflow-hidden shadow-xl shadow-red-900/20">
+      <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 65%);"></div>
+      <div class="relative flex items-center justify-center min-h-[6rem]">
+       <div class="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 flex items-center">
+        <div class="bg-white rounded-lg p-1.5 md:p-2 shadow-md">
+         <img src="/WhatsApp%20Image%202026-03-31%20at%2014.55.24.jpeg" alt="Printing Center logo" class="w-full h-10 md:h-12 lg:h-14 object-contain">
+        </div>
+       </div>
+       <div class="text-center px-2">
+        <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-[0.08em] leading-none text-white">SELF SERVICE</h1>
+        <p id="copy-hero-label" class="mt-2 text-sm sm:text-base md:text-lg font-semibold uppercase tracking-[0.2em] text-white/90">TEST COPY 1</p>
+          <div id="fallback-container" class="mt-2"></div>
+       </div>
+       <div class="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
+        <button id="language-toggle" class="soft-btn bg-white/95 text-red-700 hover:bg-white px-4 py-2.5 text-sm md:text-base border border-white/70 shadow-lg"><span id="current-lang">NL</span></button>
+       </div>
+      </div>
+     </div>
+    </header>
+
+    <main class="flex-1 px-4 md:px-8 pb-8 md:pb-10">
+     <div class="max-w-7xl mx-auto space-y-6 md:space-y-8">
+      <section class="saas-card p-6 md:p-8 bg-gradient-to-br from-red-600 via-red-600 to-red-500 text-white relative overflow-hidden">
+       <div class="absolute inset-0 opacity-25" style="background-image: radial-gradient(circle at 12% 12%, rgba(255,255,255,0.32) 0, transparent 32%), radial-gradient(circle at 88% 88%, rgba(255,255,255,0.22) 0, transparent 30%);"></div>
+       <div class="relative">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+         <div class="xl:col-span-4 rounded-3xl border border-white/35 bg-white text-zinc-900 p-5 md:p-6 shadow-[0_18px_32px_rgba(0,0,0,0.18)]">
+          <h4 id="guide-title" class="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 mb-5 md:mb-6">Instructions:</h4>
+          <ol class="space-y-3 text-sm md:text-base font-semibold">
+                 <li id="guide-step-1" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3">1. Scan de QR-code rechts met je telefoon.</li>
+           <li id="guide-step-2" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3">2. Upload jouw bestand vanaf je telefoon, tablet of laptop.</li>
+           <li id="guide-step-3" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3">3. Wacht tot het bestand hieronder verschijnt in de lijst met uploads.</li>
+               <li id="guide-step-4" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3">4. Klik op Voorbeeld of Download om het bestand te openen.</li>
+          </ol>
+           <p id="guide-tip" class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 px-4 py-3 text-sm md:text-base"><strong>Tip:</strong> Het is mogelijk om het bestand te renderen naar PDF voordat je het downloadt.</p>
+         </div>
+
+         <div class="xl:col-span-4 rounded-3xl border border-white/45 bg-white/12 p-5 md:p-6 backdrop-blur-sm">
+          <div class="text-center mb-4 md:mb-5">
+           <p id="quick-access-label" class="text-xs uppercase tracking-[0.24em] text-white/80 font-semibold">Quick access</p>
+           <p id="scan-upload-text" class="text-2xl md:text-3xl font-bold mt-2">Scan and upload file</p>
+          </div>
+          <div class="rounded-3xl bg-white p-4 md:p-6 shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
+           <img id="qr-image" alt="QR code to TEST COPY 1 upload page" class="w-full max-w-[470px] mx-auto rounded-2xl border border-zinc-200 p-2 bg-white">
+          </div>
+          <div class="grid grid-cols-1 gap-3 mt-5">
+           <button id="new-session-btn" class="soft-btn bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-3 border border-zinc-900/70">Nieuwe sessie</button>
+           <button id="openPrijzenBtn" type="button" class="flyer-prijs-button w-full">Prijslijst</button>
+          </div>
+         </div>
+
+         <div class="xl:col-span-4 rounded-3xl border border-white/35 bg-white text-zinc-900 p-5 md:p-6 shadow-[0_18px_32px_rgba(0,0,0,0.18)] flex flex-col">
+          <div class="flex items-center justify-between gap-3 mb-4">
+           <div>
+            <div class="flex items-center gap-2 mb-1">
+             <span class="inline-flex items-center gap-1.5 rounded-full bg-green-600 text-white text-xs font-bold px-2.5 py-1 uppercase tracking-wide"><span class="live-dot inline-block w-2 h-2 rounded-full bg-white"></span><span id="live-badge-text">Live</span></span>
+            </div>
+            <h2 id="uploads-title" class="text-lg md:text-xl font-extrabold text-zinc-900">Uploads</h2>
+            <p id="uploads-subtitle" class="text-xs text-zinc-500 mt-0.5">TEST COPY 1</p>
+           </div>
+           <button id="refresh-files" class="soft-btn px-3 py-1.5 text-xs text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-500 shadow-[0_8px_16px_rgba(220,38,38,0.25)]"></button>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+           <button id="download-all-files" class="soft-btn px-3 py-1.5 text-xs text-white bg-red-600 hover:bg-red-500 shadow-[0_8px_16px_rgba(220,38,38,0.22)]">Alles downloaden</button>
+           <button id="print-all-files" class="soft-btn px-3 py-1.5 text-xs text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_8px_16px_rgba(16,185,129,0.24)]">Alles printen</button>
+           <button id="open-edit-layout-modal" class="soft-btn px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-500 shadow-[0_8px_16px_rgba(37,99,235,0.24)]">Edit Layout</button>
+          </div>
+          <div class="flex-1 overflow-y-auto space-y-2 max-h-[34rem] md:max-h-[68rem] pr-1">
+           <div id="files-status" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 font-semibold">Loading files...</div>
+           <ul id="files-list" class="hidden space-y-2"></ul>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+
+      <section class="saas-card p-6 md:p-8 bg-gradient-to-br from-white via-white to-red-50/45">
+       <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+        <h3 id="preview-title" class="text-2xl md:text-3xl font-extrabold text-zinc-900">Bestandsvoorbeeld</h3>
+        <button id="preview-print-btn" class="soft-btn bg-emerald-600 text-white text-xs px-4 py-2 opacity-50 cursor-not-allowed" disabled>Print</button>
+       </div>
+      <p id="preview-subtitle" class="text-sm md:text-base text-zinc-500 mb-5">Klik op Voorbeeld om de inhoud hier direct te zien.</p>
+      <div class="rounded-2xl border border-zinc-200 bg-white/90 p-5 min-h-[20rem] shadow-inner">
+       <div id="preview-empty" class="h-full flex items-center justify-center text-center text-zinc-400 text-sm md:text-base">Nog geen voorbeeld geselecteerd.</div>
+       <div id="preview-content" class="hidden rounded-xl border border-zinc-200 bg-white p-3 md:p-4"></div>
+      </div>
+      </section>
+     </div>
+    </main>
+
+    <div id="prijzenModal" class="modal" aria-hidden="true">
+     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="prijzenModalTitle">
+      <button id="prijzen-close-btn" type="button" class="close-btn" aria-label="Sluit prijslijst">&times;</button>
+
+      <div class="flyer-header">
+       <h1 id="prijzenModalTitle">Selfservice Printen en Kopiëren</h1>
+      <p id="prijzen-subtitle" class="flyer-sub-groen">Duidelijke prijzen voor printen, kopieren en afwerken</p>
+      </div>
+
+      <div class="flyer-grid">
+       <div class="flyer-card groen-accent">
+        <div id="prijzen-startup-header" class="card-header">Opstart kosten / Hulp</div>
+      <table class="flyer-table">
+       <tbody>
+        <tr>
+           <td id="prijzen-startup-row-1"><strong>Opstart kosten</strong><br><small>Incl. 5min. computergebruik.</small></td>
+         <td class="prijs">€ 0,95</td>
+        </tr>
+        <tr>
+           <td id="prijzen-startup-row-2"><strong>Opstart kosten</strong><br><small>hulp van personeel</small></td>
+         <td class="prijs">€ 2,50</td>
+        </tr>
+       </tbody>
+      </table>
+       </div>
+
+       <div class="flyer-card">
+      <div id="prijzen-bw-header" class="card-header">Printen zwart-wit* <span id="prijzen-bw-sub" class="subheader-text">Prijs per pagina - A4 en A3</span></div>
+      <table class="flyer-table">
+       <thead>
+        <tr>
+         <th id="prijzen-bw-col-amount">Aantal</th>
+         <th class="prijs">A4</th>
+         <th class="prijs">A3</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr><td>0-150</td><td class="prijs">€ 0,15</td><td class="prijs">€ 0,30</td></tr>
+        <tr><td>151-300</td><td class="prijs">€ 0,13</td><td class="prijs">€ 0,25</td></tr>
+        <tr><td>301-500</td><td class="prijs">€ 0,11</td><td class="prijs">€ 0,22</td></tr>
+        <tr><td>500-750</td><td class="prijs">€ 0,10</td><td class="prijs">€ 0,20</td></tr>
+        <tr><td>751-1000</td><td class="prijs">€ 0,09</td><td class="prijs">€ 0,18</td></tr>
+        <tr><td>1001&gt;</td><td class="prijs">€ 0,07</td><td class="prijs">€ 0,14</td></tr>
+       </tbody>
+      </table>
+       </div>
+
+       <div class="flyer-card">
+      <div id="prijzen-color-header" class="card-header">Printen in kleur* <span id="prijzen-color-sub" class="subheader-text">Prijs per pagina - A4 en A3</span></div>
+      <table class="flyer-table">
+       <thead>
+        <tr>
+         <th id="prijzen-color-col-amount">Aantal</th>
+         <th class="prijs">A4</th>
+         <th class="prijs">A3</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr><td>0-50</td><td class="prijs">€ 0,49</td><td class="prijs">€ 0,98</td></tr>
+        <tr><td>51-75</td><td class="prijs">€ 0,45</td><td class="prijs">€ 0,90</td></tr>
+        <tr><td>76-99</td><td class="prijs">€ 0,40</td><td class="prijs">€ 0,80</td></tr>
+        <tr><td>100-249</td><td class="prijs">€ 0,35</td><td class="prijs">€ 0,70</td></tr>
+        <tr><td>250-499</td><td class="prijs">€ 0,30</td><td class="prijs">€ 0,60</td></tr>
+        <tr><td>500-999</td><td class="prijs">€ 0,27</td><td class="prijs">€ 0,54</td></tr>
+        <tr><td>1000-1499</td><td class="prijs">€ 0,25</td><td class="prijs">€ 0,50</td></tr>
+        <tr><td>1500&gt;</td><td id="prijzen-color-on-request" colspan="2" class="prijs" style="text-align:right; font-weight:normal; font-style:italic; color:#777;">Op aanvraag</td></tr>
+       </tbody>
+      </table>
+       </div>
+
+      <div class="flyer-card rood-accent">
+      <div id="prijzen-paper-header" class="card-header">Dikker papier** <span id="prijzen-paper-sub" class="subheader-text">Toeslag per vel - A4 en A3</span></div>
+      <table class="flyer-table">
+       <thead>
+        <tr>
+         <th id="prijzen-paper-col-gram">Gram</th>
+         <th class="prijs">A4</th>
+         <th class="prijs">A3</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr><td>100 gr.</td><td class="prijs">€ 0,10</td><td class="prijs">€ 0,20</td></tr>
+        <tr><td>120 gr.</td><td class="prijs">€ 0,15</td><td class="prijs">€ 0,30</td></tr>
+        <tr><td>160 gr.</td><td class="prijs">€ 0,25</td><td class="prijs">€ 0,49</td></tr>
+        <tr><td>250 gr.</td><td class="prijs">€ 0,35</td><td class="prijs">€ 0,70</td></tr>
+        <tr><td>300 gr.</td><td class="prijs">€ 0,45</td><td class="prijs">€ 0,90</td></tr>
+       </tbody>
+      </table>
+       </div>
+
+       <div class="flyer-card hele-breedte">
+      <div id="prijzen-poster-header" class="card-header">Posters 120 g mat <span id="prijzen-poster-sub" class="subheader-text">Prijs per poster - zwart-wit of kleur</span></div>
+      <table class="flyer-table">
+       <thead>
+        <tr>
+        <th id="prijzen-poster-col-size">Formaat</th>
+         <th id="prijzen-poster-col-bw" class="prijs">zwart/wit</th>
+         <th id="prijzen-poster-col-color" class="prijs">kleur</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr><td><strong>A2</strong> <small>420 x 594 mm</small></td><td class="prijs">€ 8,95</td><td class="prijs">€ 12,95</td></tr>
+        <tr><td><strong>A1</strong> <small>594 x 841 mm</small></td><td class="prijs">€ 12,95</td><td class="prijs">€ 19,95</td></tr>
+        <tr><td><strong>A0</strong> <small>841 x 1189 mm</small></td><td class="prijs">€ 19,95</td><td class="prijs">€ 29,95</td></tr>
+        <tr><td><strong>B2</strong> <small>500 x 700 mm</small></td><td class="prijs">€ 9,95</td><td class="prijs">€ 14,95</td></tr>
+        <tr><td><strong>B1</strong> <small>700 x 1000 mm</small></td><td class="prijs">€ 16,95</td><td class="prijs">€ 24,95</td></tr>
+       </tbody>
+      </table>
+      <p id="prijzen-poster-footnote" class="tabel-voetnoot">Ander formaat nodig? Vraag een medewerker, we helpen je graag.</p>
+       </div>
+
+       <div class="flyer-card">
+      <div id="prijzen-bind-header" class="card-header">Inbinden (extra)</div>
+      <table class="flyer-table">
+       <tbody>
+        <tr><td>Lijmrug</td><td class="prijs">€ 3,95</td></tr>
+        <tr><td>Plastic Ringband</td><td class="prijs">€ 3,50</td></tr>
+        <tr><td>Wire-O</td><td class="prijs">€ 3,95</td></tr>
+        <tr><td id="prijzen-bind-trim"><strong>Schoonsnijden</strong><br><small>Bij kleine oplage</small></td><td class="prijs">€ 3,50</td></tr>
+       </tbody>
+      </table>
+       </div>
+
+       <div class="flyer-card">
+      <div id="prijzen-laminate-header" class="card-header">Lamineren**</div>
+      <table class="flyer-table">
+       <tbody>
+        <tr><td>A6 of A5</td><td class="prijs">€ 1,95</td></tr>
+        <tr><td>A4</td><td class="prijs">€ 2,95</td></tr>
+        <tr><td>A3</td><td class="prijs">€ 3,95</td></tr>
+        <tr><td>Pasje</td><td class="prijs">€ 1,75</td></tr>
+        <tr><td id="prijzen-laminate-cut"><strong>Snijden per snede</strong></td><td class="prijs">€ 1,-</td></tr>
+       </tbody>
+      </table>
+       </div>
+
+       <div class="flyer-card">
+      <div id="prijzen-scan-header" class="card-header">Scannen*</div>
+      <table class="flyer-table">
+       <tbody>
+        <tr><td>1-10</td><td class="prijs">€ 0,50</td></tr>
+        <tr><td>11-49</td><td class="prijs">€ 0,35</td></tr>
+        <tr><td>50-99</td><td class="prijs">€ 0,25</td></tr>
+        <tr><td>100-499</td><td class="prijs">€ 0,15</td></tr>
+        <tr><td>500-1999</td><td class="prijs">€ 0,10</td></tr>
+        <tr><td>2000&gt;</td><td class="prijs">€ 0,05</td></tr>
+       </tbody>
+      </table>
+       </div>
+      </div>
+
+      <div class="flyer-footer">
+       <div class="footer-links">
+      <p id="prijzen-footnote-page"><strong>* = prijs per pagina</strong></p>
+      <p id="prijzen-footnote-sheet"><strong>** = prijs per vel</strong></p>
+      <p id="prijzen-print-warning" class="fout-afdruk">Controleer je bestand goed. Fout geprinte pagina's worden wel berekend.</p>
+       </div>
+       <div class="footer-rechts">
+      <p id="prijzen-download-warning" class="drukmelding">Download je bestand eerst op deze computer en start daarna met printen.</p>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div id="editLayoutModal" class="modal" aria-hidden="true">
+     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editLayoutModalTitle" style="max-width:1200px;">
+      <button id="edit-layout-close-btn" type="button" class="close-btn" aria-label="Sluit layout editor">&times;</button>
+
+      <div class="flyer-header">
+       <h1 id="editLayoutModalTitle">Edit Layout</h1>
+       <p class="flyer-sub-groen">Kies een afbeelding en stel de afdrukindeling in</p>
+      </div>
+
+      <div class="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
+       <label class="block w-full max-w-xl text-[11px] font-bold text-zinc-600 tracking-wide uppercase">
+        Afbeelding selecteren / Image target
+        <select id="edit-layout-file-select" class="mt-1 block w-full rounded-sm border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 shadow-[inset_0_1px_1px_rgba(0,0,0,0.08)] focus:outline-none focus:ring-2 focus:ring-blue-300"></select>
+       </label>
+      </div>
+
+      <div class="rounded-lg border border-[#93a2b9] bg-gradient-to-b from-[#eef3fb] via-[#e6edf8] to-[#dce6f6] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_1px_2px_rgba(15,23,42,0.08)]">
+       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+        <label class="block w-full text-[11px] font-bold text-[#34425a] tracking-wide uppercase">
+      Papierformaat / Sheet size
+      <select id="edit-layout-paper-size" class="mt-1 block w-full rounded-sm border border-[#7f95b5] bg-white px-2 py-1.5 text-sm text-zinc-800 shadow-[inset_0_1px_1px_rgba(0,0,0,0.08)] focus:outline-none focus:ring-2 focus:ring-blue-300">
+       <option value="A4" selected>A4</option>
+       <option value="A3">A3</option>
+      </select>
+        </label>
+        <label class="block w-full text-[11px] font-bold text-[#34425a] tracking-wide uppercase">
+      Oriëntatie / Orientation
+      <select id="edit-layout-orientation" class="mt-1 block w-full rounded-sm border border-[#7f95b5] bg-white px-2 py-1.5 text-sm text-zinc-800 shadow-[inset_0_1px_1px_rgba(0,0,0,0.08)] focus:outline-none focus:ring-2 focus:ring-blue-300">
+       <option value="portrait" selected>Portrait</option>
+       <option value="landscape">Landscape</option>
+      </select>
+        </label>
+       </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+       <div class="xl:col-span-9 rounded-lg border border-[#a4afc0] bg-gradient-to-b from-[#d7dce4] to-[#c9d0db] p-4 md:p-6 min-h-[520px] flex items-center justify-center">
+      <div id="edit-layout-sheet" class="relative overflow-hidden bg-white shadow-[0_0_0_1px_rgba(31,41,55,0.26),0_14px_28px_rgba(15,23,42,0.22)] transition-all duration-200 ease-out w-[290px] h-[410px] sm:w-[360px] sm:h-[509px]">
+       <div id="edit-layout-empty-state" class="absolute inset-0 flex items-center justify-center text-center px-6 text-zinc-500 text-sm font-semibold">Selecteer een bestand met Voorbeeld om de afdrukindeling te tonen.</div>
+       <div id="edit-layout-grid" class="absolute inset-4 grid gap-1.5"></div>
+      </div>
+       </div>
+
+       <aside class="xl:col-span-3 rounded-lg border border-[#9ba7bb] bg-[#eef2f8] p-3 max-h-[620px] overflow-y-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+      <h3 class="text-base font-extrabold text-zinc-800">Layout presets</h3>
+      <p class="mt-1 text-xs text-zinc-600">Kies je formaat in centimeters.</p>
+      <div id="edit-layout-presets" class="mt-3 space-y-2"></div>
+       </aside>
+      </div>
+
+      <div class="mt-4 rounded-lg border border-[#93a2b9] bg-gradient-to-b from-[#eaf0fa] to-[#dbe5f5] p-3 md:p-4 flex flex-wrap items-center gap-3">
+       <label class="text-sm font-semibold text-zinc-700">
+      Copies / Aantal afdrukken
+      <input id="edit-layout-copies" type="number" min="1" value="1" class="ml-2 w-20 rounded-sm border border-[#7f95b5] px-2 py-1 text-sm text-zinc-800 shadow-[inset_0_1px_1px_rgba(0,0,0,0.08)]">
+       </label>
+       <label class="inline-flex items-center gap-2 text-sm font-semibold text-zinc-700 select-none">
+      <input id="edit-layout-fit-frame" type="checkbox" checked class="h-4 w-4 rounded border-zinc-400 text-blue-600 focus:ring-blue-400">
+      Fit picture to frame
+       </label>
+       <div class="ml-auto flex items-center gap-2">
+      <button id="edit-layout-cancel-btn" type="button" class="soft-btn rounded-sm border border-zinc-500 bg-gradient-to-b from-white to-zinc-100 px-5 py-2 text-sm text-zinc-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] hover:bg-zinc-100">Cancel</button>
+      <button id="edit-layout-apply-btn" type="button" class="soft-btn rounded-sm border border-[#1b3f8f] bg-gradient-to-b from-[#4e7fd8] to-[#2f61bb] px-6 py-2 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">Apply Layout</button>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <footer class="px-4 md:px-8 pb-6">
+     <div class="max-w-7xl mx-auto rounded-2xl border border-white/80 bg-white/85 backdrop-blur px-5 py-3 text-center text-xs md:text-sm text-zinc-500 shadow-[0_8px_20px_rgba(15,23,42,0.05)]">© 2024 FD Printing Center - Selfservice Printing</div>
+    </footer>
+   </div>
+  </div>
+
+  <script src="/session-timeout.js"></script>
+  <script>
+   window.FDPFilesPageConfig = {
+    folderName: 'copy1',
+    uploadPath: '/upload_copy1.html',
+    copyLabel: 'COPY 1'
+   };
+  </script>
+  <script src="/files-page.js"></script>
+  <script>
+   (function () {
+    const openButton = document.getElementById('open-edit-layout-modal');
+    const modal = document.getElementById('editLayoutModal');
+    const closeButton = document.getElementById('edit-layout-close-btn');
+    const cancelButton = document.getElementById('edit-layout-cancel-btn');
+    const applyButton = document.getElementById('edit-layout-apply-btn');
+    const fileSelect = document.getElementById('edit-layout-file-select');
+    const sheet = document.getElementById('edit-layout-sheet');
+    const grid = document.getElementById('edit-layout-grid');
+    const emptyState = document.getElementById('edit-layout-empty-state');
+    const presetsBox = document.getElementById('edit-layout-presets');
+    const copiesInput = document.getElementById('edit-layout-copies');
+    const fitCheckbox = document.getElementById('edit-layout-fit-frame');
+    const paperSizeSelect = document.getElementById('edit-layout-paper-size');
+    const orientationSelect = document.getElementById('edit-layout-orientation');
+    const previewEmpty = document.getElementById('preview-empty');
+    const previewContent = document.getElementById('preview-content');
+
+    if (!openButton || !modal || !closeButton || !cancelButton || !applyButton || !fileSelect || !sheet || !grid || !emptyState || !presetsBox || !copiesInput || !fitCheckbox || !paperSizeSelect || !orientationSelect || !previewEmpty || !previewContent) {
+     return;
+    }
+
+    const presets = [
+     { id: 'full', label: 'Full page photo (1 Up)', cols: 1, rows: 1, centered: false, tileClass: 'h-full w-full' },
+     { id: 'p10x15', label: '10 x 15 cm (2 per pagina)', cols: 1, rows: 2, centered: false, tileClass: 'h-full w-full' },
+     { id: 'p13x18', label: '13 x 18 cm (2 per pagina)', cols: 2, rows: 1, centered: false, tileClass: 'h-full w-full' },
+     { id: 'p20x25', label: '20 x 25 cm (1 centered)', cols: 1, rows: 1, centered: true, tileClass: 'h-[82%] w-[82%]' },
+     { id: 'p9x13', label: '9 x 13 cm (4 per pagina)', cols: 2, rows: 2, centered: false, tileClass: 'h-full w-full' },
+     { id: 'wallet', label: 'Pasfoto / Wallet (9 mini pictures)', cols: 3, rows: 3, centered: false, tileClass: 'h-full w-full' }
+    ];
+
+    let previousBodyOverflow = '';
+
+    const state = {
+     activePreset: presets[0],
+     activeUrl: '',
+     activeEncodedFileName: '',
+     fitToFrame: true,
+     copies: 1,
+      previewMode: 'none',
+     lastPreviewUrl: '',
+     lastKnownEncodedFileName: '',
+     modalOpen: false
+    };
+
+    function syncImpositionSettings() {
+     window.FDPImpositionSettings = {
+      paperSize: paperSizeSelect.value,
+        orientation: orientationSelect.value === 'landscape' ? 'landscape' : 'portrait',
+      copies: state.copies,
+      fitToFrame: state.fitToFrame,
+      presetId: state.activePreset.id,
+      presetLabel: state.activePreset.label,
+      imageUrl: state.previewMode === 'image' ? state.activeUrl : '',
+      layoutSourceUrl: state.activeUrl,
+      layoutSourceKind: state.previewMode,
+      encodedFileName: state.activeEncodedFileName
+     };
+    }
+
+    function decodeFileName(encodedFileName) {
+     try {
+      return decodeURIComponent(encodedFileName);
+     } catch (error) {
+      return encodedFileName;
+     }
+    }
+
+    function getAccessQuery() {
+     const access = new URLSearchParams(window.location.search).get('access');
+     return access ? ('?access=' + encodeURIComponent(access)) : '';
+    }
+
+    function buildPreviewUrl(encodedFileName) {
+     const config = window.FDPFilesPageConfig || {};
+     if (!config.folderName || !encodedFileName) return '';
+     return '/preview/' + config.folderName + '/' + encodedFileName + getAccessQuery();
+    }
+
+    function buildRenderPdfUrl(encodedFileName) {
+     const config = window.FDPFilesPageConfig || {};
+     if (!config.folderName || !encodedFileName) return '';
+
+     const accessQuery = getAccessQuery();
+     return '/render-pdf/' + config.folderName + '/' + encodedFileName + (accessQuery ? (accessQuery + '&inline=1') : '?inline=1');
+    }
+
+    function getFileExtension(fileName) {
+     if (!fileName || fileName.indexOf('.') === -1) return '';
+     return fileName.split('.').pop().toLowerCase();
+    }
+
+    function isPreviewableImageFileName(fileName) {
+     return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'avif', 'heic', 'heif'].includes(getFileExtension(fileName));
+    }
+
+    function resolveLayoutPreviewForFile(encodedFileName, fallbackUrl) {
+     if (!encodedFileName) {
+      return {
+       url: fallbackUrl || '',
+       mode: fallbackUrl ? 'pdf' : 'none'
+      };
+     }
+
+     const fileName = decodeFileName(encodedFileName);
+     const isImage = isPreviewableImageFileName(fileName);
+
+     return {
+      url: isImage ? buildPreviewUrl(encodedFileName) : buildRenderPdfUrl(encodedFileName),
+      mode: isImage ? 'image' : 'pdf'
+     };
+    }
+
+    function readUploadedFilesFromList() {
+     const items = Array.from(document.querySelectorAll('#files-list .upload-item[data-encoded-file]'));
+     return items.map(function (item) {
+      const encoded = item.getAttribute('data-encoded-file') || '';
+      return {
+       encodedFileName: encoded,
+       fileName: decodeFileName(encoded),
+       previewUrl: buildPreviewUrl(encoded)
+      };
+     }).filter(function (file) {
+      return file.encodedFileName && file.previewUrl;
+     });
+    }
+
+      async function fetchFilesForEditor() {
+       const listFiles = readUploadedFilesFromList();
+       if (listFiles.length > 0) return listFiles;
+
+       const config = window.FDPFilesPageConfig || {};
+       if (!config.folderName) return [];
+
+       try {
+        const response = await fetch('/files/' + config.folderName);
+        if (!response.ok) return [];
+        const data = await response.json();
+        const files = Array.isArray(data.files) ? data.files : [];
+
+        return files.map(function (fileName) {
+         const encoded = encodeURIComponent(fileName);
+         return {
+          encodedFileName: encoded,
+          fileName: fileName,
+          previewUrl: buildPreviewUrl(encoded)
+         };
+        });
+       } catch (error) {
+        return [];
+       }
+      }
+
+      function pickInitialFile(files) {
+        if (!Array.isArray(files) || files.length === 0) return null;
+
+        const byLastSelection = files.find(function (file) {
+         return file.encodedFileName === state.lastKnownEncodedFileName;
+        });
+        if (byLastSelection) return byLastSelection;
+
+        return files[0];
+      }
+
+    function paperClassesBySize(size, orientation) {
+     const isLandscape = orientation === 'landscape';
+
+     if (size === 'A3') {
+      return isLandscape
+       ? 'w-[509px] h-[360px] sm:w-[661px] sm:h-[468px]'
+       : 'w-[360px] h-[509px] sm:w-[468px] sm:h-[661px]';
+     }
+
+     return isLandscape
+      ? 'w-[410px] h-[290px] sm:w-[509px] sm:h-[360px]'
+      : 'w-[290px] h-[410px] sm:w-[360px] sm:h-[509px]';
+    }
+
+    function updatePaperSize() {
+     sheet.className = 'relative overflow-hidden bg-white shadow-[0_0_0_1px_rgba(31,41,55,0.26),0_14px_28px_rgba(15,23,42,0.22)] transition-all duration-200 ease-out ' + paperClassesBySize(paperSizeSelect.value, orientationSelect.value);
+    }
+
+    function miniMockup(preset) {
+     const count = preset.cols * preset.rows;
+     let cells = '';
+
+     for (let index = 0; index < count; index += 1) {
+      cells += '<span class="block rounded-[2px] border border-zinc-400 bg-zinc-300"></span>';
+     }
+
+     return '<span class="grid h-11 w-14 gap-[2px] rounded-sm border border-[#8795ab] bg-white p-1" style="grid-template-columns:repeat(' + preset.cols + ',minmax(0,1fr));grid-template-rows:repeat(' + preset.rows + ',minmax(0,1fr));">' + cells + '</span>';
+    }
+
+    function renderPresets() {
+     presetsBox.innerHTML = presets.map(function (preset) {
+      const isActive = preset.id === state.activePreset.id;
+      const base = 'w-full rounded-sm border px-2 py-2 text-left transition';
+      const visual = isActive
+       ? 'border-[#4f6fa7] bg-gradient-to-b from-[#f8fbff] to-[#e5eefb] shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]'
+       : 'border-[#a3aec0] bg-white hover:bg-[#f3f7ff]';
+
+      return '<button type="button" data-preset="' + preset.id + '" class="' + base + ' ' + visual + '">'
+       + '<span class="flex items-center gap-2">'
+       + miniMockup(preset)
+       + '<span class="text-[12px] font-semibold leading-snug text-zinc-700">' + preset.label + '</span>'
+       + '</span>'
+       + '</button>';
+     }).join('');
+    }
+
+    function imageCell(url) {
+     return '<div class="relative h-full min-h-[2.5rem] w-full overflow-hidden border border-zinc-300 bg-zinc-100">'
+      + '<img src="' + url + '" alt="Preview" class="absolute inset-0 h-full w-full ' + (state.fitToFrame ? 'object-cover' : 'object-contain') + '">'
+      + '</div>';
+    }
+
+    function documentCell(url) {
+     const viewerUrl = (url || '') + '#toolbar=0&navpanes=0&scrollbar=0';
+     return '<div class="relative h-full min-h-[2.5rem] w-full overflow-hidden border border-zinc-300 bg-white">'
+      + '<object data="' + viewerUrl + '" type="application/pdf" class="absolute inset-0 h-full w-full">'
+      + '<iframe src="' + viewerUrl + '" class="absolute inset-0 h-full w-full" loading="eager"></iframe>'
+      + '<div class="flex h-full w-full items-center justify-center bg-zinc-50 px-2 text-center text-[10px] font-semibold text-zinc-500">Document preview niet beschikbaar op dit apparaat.</div>'
+      + '</object>'
+      + '</div>';
+    }
+
+    function tileCell(url, mode) {
+     return mode === 'image' ? imageCell(url) : documentCell(url);
+    }
+
+    function isPreviewableImage(url) {
+     return /\.(png|jpe?g|gif|webp|bmp|tiff?|avif|heic|heif)(\?|$)/i.test(url || '');
+    }
+
+    function renderGrid() {
+     updatePaperSize();
+
+     if (!state.activeUrl) {
+      grid.className = 'absolute inset-4 grid gap-1.5';
+      grid.innerHTML = '';
+      emptyState.textContent = 'Selecteer een bestand met Voorbeeld om de afdrukindeling te tonen.';
+      emptyState.classList.remove('hidden');
+      return;
+     }
+
+     emptyState.classList.add('hidden');
+
+     const slots = state.activePreset.cols * state.activePreset.rows;
+     grid.style.gridTemplateColumns = 'repeat(' + state.activePreset.cols + ', minmax(0, 1fr))';
+     grid.style.gridTemplateRows = 'repeat(' + state.activePreset.rows + ', minmax(0, 1fr))';
+     grid.className = 'absolute inset-4 grid gap-1.5 ' + (state.activePreset.centered ? 'place-items-center' : '');
+
+     let markup = '';
+     for (let index = 0; index < slots; index += 1) {
+      markup += '<div class="min-h-0 min-w-0 ' + state.activePreset.tileClass + '">' + tileCell(state.activeUrl, state.previewMode) + '</div>';
+     }
+
+     grid.innerHTML = markup;
+    }
+
+    function previewMarkupForMainArea() {
+    const layoutLabel = state.activePreset.label + ' - ' + paperSizeSelect.value + ' ' + (orientationSelect.value === 'landscape' ? 'Landscape' : 'Portrait') + ' - x' + state.copies;
+     const slots = state.activePreset.cols * state.activePreset.rows;
+     let markup = '';
+
+     for (let index = 0; index < slots; index += 1) {
+      markup += '<div class="min-h-0 min-w-0 ' + state.activePreset.tileClass + '">' + tileCell(state.activeUrl, state.previewMode) + '</div>';
+     }
+
+     return '<div class="space-y-3">'
+      + '<div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">Actieve layout: ' + layoutLabel + '</div>'
+      + '<div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 flex justify-center">'
+      + '<div class="relative overflow-hidden bg-white shadow-[0_0_0_1px_rgba(31,41,55,0.22),0_12px_24px_rgba(15,23,42,0.12)] ' + paperClassesBySize(paperSizeSelect.value, orientationSelect.value) + '">'
+      + '<div class="absolute inset-3 grid gap-1.5 ' + (state.activePreset.centered ? 'place-items-center' : '') + '" style="grid-template-columns:repeat(' + state.activePreset.cols + ', minmax(0, 1fr));grid-template-rows:repeat(' + state.activePreset.rows + ', minmax(0, 1fr));">'
+      + markup
+      + '</div>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+    }
+
+    function setActiveFile(encodedFileName, previewUrl) {
+     state.activeEncodedFileName = encodedFileName || '';
+     const resolved = resolveLayoutPreviewForFile(state.activeEncodedFileName, previewUrl || '');
+     state.activeUrl = resolved.url;
+     state.previewMode = resolved.mode;
+
+      const canApply = Boolean(state.activeEncodedFileName && state.activeUrl);
+      applyButton.disabled = !canApply;
+      applyButton.classList.toggle('opacity-50', !canApply);
+      applyButton.classList.toggle('cursor-not-allowed', !canApply);
+
+     syncImpositionSettings();
+     renderGrid();
+    }
+
+    function setActivePreset(nextId) {
+     const next = presets.find(function (preset) {
+      return preset.id === nextId;
+     });
+
+     if (!next) return;
+
+     state.activePreset = next;
+     syncImpositionSettings();
+     renderPresets();
+     renderGrid();
+    }
+
+    presetsBox.addEventListener('click', function (event) {
+     const button = event.target.closest('button[data-preset]');
+     if (!button) return;
+     setActivePreset(button.getAttribute('data-preset'));
+    });
+
+    copiesInput.addEventListener('input', function () {
+     const nextCopies = Number(copiesInput.value || 1);
+     state.copies = Math.max(1, Number.isFinite(nextCopies) ? nextCopies : 1);
+     syncImpositionSettings();
+    });
+
+    fitCheckbox.addEventListener('change', function () {
+     state.fitToFrame = fitCheckbox.checked;
+     syncImpositionSettings();
+     renderGrid();
+    });
+
+    paperSizeSelect.addEventListener('change', function () {
+     syncImpositionSettings();
+     renderGrid();
+    });
+
+    orientationSelect.addEventListener('change', function () {
+     syncImpositionSettings();
+     renderGrid();
+    });
+
+    function setModalOpen(nextOpen) {
+     state.modalOpen = nextOpen;
+     if (nextOpen) {
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      return;
+     }
+
+         document.body.style.overflow = previousBodyOverflow || '';
+     modal.classList.remove('is-open');
+     modal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function populateFileDropdown() {
+     fileSelect.innerHTML = '<option value="">Bestanden laden...</option>';
+
+     const files = await fetchFilesForEditor();
+     fileSelect.innerHTML = files.map(function (file) {
+      const selected = file.encodedFileName === state.lastKnownEncodedFileName ? ' selected' : '';
+      return '<option value="' + file.encodedFileName + '"' + selected + '>' + file.fileName + '</option>';
+     }).join('');
+
+     if (files.length === 0) {
+      fileSelect.innerHTML = '<option value="">Geen upload beschikbaar</option>';
+      setActiveFile('', '');
+      return;
+     }
+
+    const active = pickInitialFile(files);
+    if (!active) {
+     setActiveFile('', '');
+     return;
+    }
+
+     state.lastKnownEncodedFileName = active.encodedFileName;
+     fileSelect.value = active.encodedFileName;
+     setActiveFile(active.encodedFileName, active.previewUrl);
+    }
+
+      async function openEditorModal() {
+    await populateFileDropdown();
+     setModalOpen(true);
+    }
+
+    function closeEditorModal() {
+     setModalOpen(false);
+    }
+
+    async function applyLayoutToMainPreview() {
+      if (!state.activeEncodedFileName || !state.activeUrl) {
+      return;
+     }
+
+     if (typeof window.showPreview === 'function') {
+      await window.showPreview(state.activeEncodedFileName);
+     }
+
+     previewEmpty.classList.add('hidden');
+     previewContent.classList.remove('hidden');
+     previewContent.innerHTML = previewMarkupForMainArea();
+
+     window.FDPImpositionSettings = {
+      paperSize: paperSizeSelect.value,
+        orientation: orientationSelect.value === 'landscape' ? 'landscape' : 'portrait',
+      copies: state.copies,
+      fitToFrame: state.fitToFrame,
+      presetId: state.activePreset.id,
+      presetLabel: state.activePreset.label,
+      imageUrl: state.previewMode === 'image' ? state.activeUrl : '',
+      layoutSourceUrl: state.activeUrl,
+      layoutSourceKind: state.previewMode,
+      encodedFileName: state.activeEncodedFileName
+     };
+
+     closeEditorModal();
+    }
+
+    openButton.addEventListener('click', openEditorModal);
+    closeButton.addEventListener('click', closeEditorModal);
+    cancelButton.addEventListener('click', closeEditorModal);
+    applyButton.addEventListener('click', function () {
+     applyLayoutToMainPreview();
+    });
+
+    fileSelect.addEventListener('change', function () {
+     const encoded = fileSelect.value || '';
+     state.lastKnownEncodedFileName = encoded;
+     setActiveFile(encoded, buildPreviewUrl(encoded));
+    });
+
+    modal.addEventListener('click', function (event) {
+     if (event.target === modal) {
+      closeEditorModal();
+     }
+    });
+
+    window.addEventListener('keydown', function (event) {
+     if (event.key === 'Escape' && state.modalOpen) {
+      closeEditorModal();
+     }
+    });
+
+    window.loadFileIntoImpositionPreview = function (url) {
+     const nextUrl = typeof url === 'string' ? url : '';
+      state.lastPreviewUrl = nextUrl;
+      const resolved = resolveLayoutPreviewForFile(state.activeEncodedFileName, nextUrl);
+      state.activeUrl = resolved.url;
+      state.previewMode = resolved.mode;
+      const canApply = Boolean(state.activeEncodedFileName && state.activeUrl);
+      applyButton.disabled = !canApply;
+      applyButton.classList.toggle('opacity-50', !canApply);
+      applyButton.classList.toggle('cursor-not-allowed', !canApply);
+     syncImpositionSettings();
+     renderGrid();
+    };
+
+    window.setImpositionActiveFile = function (encodedFileName) {
+      state.activeEncodedFileName = encodedFileName || '';
+      state.lastKnownEncodedFileName = state.activeEncodedFileName;
+      if (state.activeEncodedFileName) {
+       setActiveFile(state.activeEncodedFileName, buildPreviewUrl(state.activeEncodedFileName));
+      }
+     syncImpositionSettings();
+    };
+
+    renderPresets();
+    syncImpositionSettings();
+    renderGrid();
+   })();
+   (function () {
+    const modal = document.getElementById('prijzenModal');
+    const openButton = document.getElementById('openPrijzenBtn');
+    const closeButton = modal ? modal.querySelector('.close-btn') : null;
+    let lastOverflow = '';
+
+    if (!modal || !openButton || !closeButton) {
+     return;
+    }
+
+    function openModal() {
+     lastOverflow = document.body.style.overflow;
+     modal.classList.add('is-open');
+     modal.setAttribute('aria-hidden', 'false');
+     document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+     modal.classList.remove('is-open');
+     modal.setAttribute('aria-hidden', 'true');
+     document.body.style.overflow = lastOverflow || '';
+    }
+
+    openButton.addEventListener('click', openModal);
+    closeButton.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', function (event) {
+     if (event.target === modal) {
+      closeModal();
+     }
+    });
+
+    window.addEventListener('keydown', function (event) {
+     if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+     }
+    });
+   })();
+  </script>
+ </body>
+</html>
