@@ -833,6 +833,33 @@ app.get('/preview/:folder/:filename', (req, res) => {
   res.sendFile(file.resolvedPath);
 });
 
+// Kleine miniatuur voor de fotoalbum-weergave (ongeveer 320 px, juist gedraaid).
+app.get('/thumb/:folder/:filename', async (req, res) => {
+  const { folder, filename } = req.params;
+  if (!isValidFolder(folder)) return res.status(400).send('Invalid folder');
+
+  const file = sanitizeAndResolveFilePath(folder, filename);
+  if (!file) return res.status(404).send('File not found');
+
+  const extension = getUploadExtension(filename);
+  if (!['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tif', '.tiff', '.avif', '.heic', '.heif'].includes(extension)) {
+    return res.status(415).send('No thumbnail for this file type');
+  }
+
+  try {
+    const thumbnail = await sharp(file.resolvedPath)
+      .rotate()
+      .resize(320, 320, { fit: 'cover', withoutEnlargement: true })
+      .jpeg({ quality: 72 })
+      .toBuffer();
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    return res.send(thumbnail);
+  } catch (error) {
+    return res.status(500).send('Thumbnail failed');
+  }
+});
+
 app.get('/text-preview/:folder/:filename', (req, res) => {
   const { folder, filename } = req.params;
   if (!isValidFolder(folder)) return res.status(400).send('Invalid folder');
