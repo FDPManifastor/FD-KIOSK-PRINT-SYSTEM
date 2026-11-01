@@ -21,7 +21,7 @@
   const style = document.createElement('style');
   style.textContent = [
     // ---------- Handleiding-knop: rinkelt als een oude telefoon, met gloed
-    '.fdp-manual-btn{position:fixed;left:1.25rem;bottom:1.25rem;z-index:8998;display:flex;align-items:center;gap:.8rem;border:0;',
+    '.fdp-manual-btn,html.fdp-touch .fdp-manual-btn{position:fixed !important;overflow:visible !important;left:1rem;top:calc(35vh - 39px);bottom:auto;z-index:8998;display:flex;align-items:center;gap:.8rem;border:0;',
     'padding:.55rem 1.4rem .55rem .55rem;border-radius:999px;background:#fff;color:#991b1b;font:800 1.1rem/1 Manrope,system-ui,sans-serif;',
     'box-shadow:0 14px 34px rgba(220,38,38,.28);cursor:pointer;transition:transform .35s ' + spring + '}',
     '.fdp-manual-btn:active{transform:scale(.94)}',
@@ -143,6 +143,7 @@
     + '<path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H14a2 2 0 0 0-2 2v15a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg></span>'
     + '<span class="fdp-manual-btn__label"></span>';
   document.body.appendChild(manualButton);
+  // Direct onder <body>: blijft vast op het scherm staan tijdens het scrollen.
 
   function applyTexts() {
     const t = texts[lang()];
