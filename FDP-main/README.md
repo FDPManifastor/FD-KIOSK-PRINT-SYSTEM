@@ -23,6 +23,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 
 - Staff open `/backoffice`, log in and click **Computer vrijgeven** for a station. The kiosk screen of that station then shows the time used and the cost in the bottom-right corner.
 - Rate: EUR 0.95 for the first 10 minutes, then EUR 0.95 per started 5 minutes.
+- The start page (`/`) shows under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged. Stations without the timer show "Timer nog niet ingeschakeld".
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.
 - Sessions are saved in `uploads/.station-sessions.json`, so a running timer survives a restart when `uploads` is on a persistent disk.
 - To roll out to another station: add the folder to `STATION_TIMER_FOLDERS` and add `<script src="/station-timer.js"></script>` and `<script src="/kiosk-guide.js"></script>` at the end of its `files_*.html` page.

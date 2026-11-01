@@ -107,8 +107,9 @@
     }
 
     function liveElapsed(station) {
-     if (station.status === 'active') return Date.now() + clockOffset - station.startedAt;
-     return station.elapsedMs || 0;
+     const base = station.elapsedMs || 0;
+     if (station.status === 'active') return base + Math.max(0, Date.now() + clockOffset - station.serverNow);
+     return base;
     }
 
     function stationCard(station) {
@@ -123,7 +124,19 @@
       body = '<div class="flex items-end justify-between"><div><p class="text-xs text-zinc-500">Gestart ' + clock(station.startedAt) + '</p>'
        + '<p class="tabular text-4xl font-extrabold" data-elapsed="' + station.folder + '">' + duration(elapsed) + '</p></div>'
        + '<p class="tabular text-3xl font-extrabold text-red-700" data-cost="' + station.folder + '">' + euro(cost) + '</p></div>';
-      actions = '<button data-action="stop" data-folder="' + station.folder + '" class="w-full rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold py-3">Stoppen en afrekenen</button>';
+      actions = '<div class="grid grid-cols-2 gap-2">'
+       + '<button data-action="pause" data-folder="' + station.folder + '" class="rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold py-3">Pauze</button>'
+       + '<button data-action="stop" data-folder="' + station.folder + '" class="rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold py-3">Stoppen en afrekenen</button>'
+       + '</div>';
+     } else if (station.status === 'paused') {
+      badge = '<span class="rounded-full bg-amber-500 text-white px-2.5 py-1 text-xs font-bold uppercase">Gepauzeerd</span>';
+      body = '<div class="flex items-end justify-between"><div><p class="text-xs text-zinc-500">Gestart ' + clock(station.startedAt) + ', gepauzeerd ' + clock(station.pausedAt) + '</p>'
+       + '<p class="tabular text-4xl font-extrabold text-amber-700">' + duration(elapsed) + '</p></div>'
+       + '<p class="tabular text-3xl font-extrabold text-amber-700">' + euro(cost) + '</p></div>';
+      actions = '<div class="grid grid-cols-2 gap-2">'
+       + '<button data-action="resume" data-folder="' + station.folder + '" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Hervatten</button>'
+       + '<button data-action="stop" data-folder="' + station.folder + '" class="rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold py-3">Stoppen en afrekenen</button>'
+       + '</div>';
      } else if (station.status === 'stopped') {
       badge = '<span class="rounded-full bg-amber-500 text-white px-2.5 py-1 text-xs font-bold uppercase">Afrekenen</span>';
       body = '<div class="rounded-xl bg-amber-50 border border-amber-200 p-4"><p class="text-xs font-semibold text-amber-900">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' (' + duration(elapsed) + ')</p>'

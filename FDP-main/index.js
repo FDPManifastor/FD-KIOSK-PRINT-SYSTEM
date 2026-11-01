@@ -1042,16 +1042,28 @@ function describeStation(folder) {
 
   if (!session) return { ...base, status: 'idle' };
 
-  const endedAt = session.stoppedAt || now;
-  const elapsedMs = Math.max(0, endedAt - session.startedAt);
+  const elapsedMs = sessionElapsedMs(session, now);
+  let status = 'active';
+  if (session.stoppedAt) status = 'stopped';
+  else if (session.pausedAt) status = 'paused';
+
   return {
     ...base,
-    status: session.stoppedAt ? 'stopped' : 'active',
+    status,
     startedAt: session.startedAt,
     stoppedAt: session.stoppedAt || null,
+    pausedAt: session.pausedAt || null,
     elapsedMs,
     costCents: calculateStationCostCents(elapsedMs)
   };
+}
+
+// Betaalde tijd = tijd sinds start, min alle pauzes (ook een lopende pauze).
+function sessionElapsedMs(session, now) {
+  const endedAt = session.stoppedAt || now;
+  const pausedTotal = session.pausedTotalMs || 0;
+  const runningPause = session.pausedAt ? Math.max(0, endedAt - session.pausedAt) : 0;
+  return Math.max(0, endedAt - session.startedAt - pausedTotal - runningPause);
 }
 
 // Zolang BACKOFFICE_PASSWORD niet is ingesteld, is de backoffice open
@@ -1121,7 +1133,7 @@ app.post('/backoffice/api/stations/:folder/start', (req, res) => {
     return res.status(409).json({ error: 'Deze computer is al vrijgegeven.', station: describeStation(folder) });
   }
 
-  stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null });
+  stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null, pausedAt: null, pausedTotalMs: 0 });
   saveStationSessions();
   console.log(`Station ${folder} vrijgegeven.`);
   return res.json({ ok: true, station: describeStation(folder) });
@@ -1137,11 +1149,48 @@ app.post('/backoffice/api/stations/:folder/stop', (req, res) => {
     return res.status(409).json({ error: 'Deze computer heeft geen lopende sessie.', station: describeStation(folder) });
   }
 
-  current.stoppedAt = Date.now();
+  const stopTime = Date.now();
+  if (current.pausedAt) {
+    current.pausedTotalMs = (current.pausedTotalMs || 0) + (stopTime - current.pausedAt);
+    current.pausedAt = null;
+  }
+  current.stoppedAt = stopTime;
   saveStationSessions();
   const station = describeStation(folder);
   console.log(`Station ${folder} gestopt na ${Math.round(station.elapsedMs / 1000)}s, kosten ${station.costCents} cent.`);
   return res.json({ ok: true, station });
+});
+
+// Pause: time and cost stand still until resumed.
+app.post('/backoffice/api/stations/:folder/pause', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const folder = requireTimerFolder(req, res);
+  if (!folder) return;
+
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt || current.pausedAt) {
+    return res.status(409).json({ error: 'Er is geen lopende sessie om te pauzeren.', station: describeStation(folder) });
+  }
+
+  current.pausedAt = Date.now();
+  saveStationSessions();
+  return res.json({ ok: true, station: describeStation(folder) });
+});
+
+app.post('/backoffice/api/stations/:folder/resume', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const folder = requireTimerFolder(req, res);
+  if (!folder) return;
+
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt || !current.pausedAt) {
+    return res.status(409).json({ error: 'Deze sessie staat niet op pauze.', station: describeStation(folder) });
+  }
+
+  current.pausedTotalMs = (current.pausedTotalMs || 0) + (Date.now() - current.pausedAt);
+  current.pausedAt = null;
+  saveStationSessions();
+  return res.json({ ok: true, station: describeStation(folder) });
 });
 
 // Clears a finished session so the kiosk no longer shows the final amount.

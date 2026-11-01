@@ -14,7 +14,9 @@
       next: 'Volgende €0,95 over',
       endedTitle: 'Sessie beëindigd',
       endedText: 'Betaal bij de balie',
-      total: 'Totaal'
+      total: 'Totaal',
+      paused: 'Gepauzeerd',
+      pausedText: 'De tijd staat stil'
     },
     en: {
       label: 'Time used',
@@ -22,7 +24,9 @@
       next: 'Next €0.95 in',
       endedTitle: 'Session ended',
       endedText: 'Please pay at the counter',
-      total: 'Total'
+      total: 'Total',
+      paused: 'Paused',
+      pausedText: 'The clock is stopped'
     }
   };
 
@@ -79,6 +83,8 @@
     '.fdp-station-timer__next{margin:.65rem 0 0;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7)}',
     '.fdp-station-timer--ended{background:rgba(185,28,28,.96)}',
     '.fdp-station-timer--ended .fdp-station-timer__cost{color:#fff}',
+    '.fdp-station-timer--paused{background:rgba(180,83,9,.95)}',
+    '.fdp-station-timer--paused .fdp-station-timer__cost{color:#fff}',
     '.fdp-station-timer__dot{display:inline-block;width:.5rem;height:.5rem;border-radius:999px;background:#34d399;margin-right:.4rem;',
     'animation:fdpTimerPulse 1.6s ease-in-out infinite}',
     '@keyframes fdpTimerPulse{0%,100%{opacity:1}50%{opacity:.3}}'
@@ -93,7 +99,7 @@
   document.body.appendChild(box);
 
   function render() {
-    if (station.status !== 'active' && station.status !== 'stopped') {
+    if (station.status !== 'active' && station.status !== 'paused' && station.status !== 'stopped') {
       box.dataset.layout = '';
       box.hidden = true;
       return;
@@ -114,20 +120,24 @@
       return;
     }
 
-    const elapsed = Date.now() + clockOffset - station.startedAt;
+    // Server sends the paid time at serverNow; while active we add the time since.
+    const paused = station.status === 'paused';
+    const elapsed = station.elapsedMs + (paused ? 0 : Math.max(0, Date.now() + clockOffset - station.serverNow));
     const price = pricingFor(elapsed);
-    const layoutKey = 'active-' + lang();
+    const layoutKey = station.status + '-' + lang();
 
     if (box.dataset.layout !== layoutKey) {
       box.dataset.layout = layoutKey;
-      box.className = 'fdp-station-timer';
+      box.className = 'fdp-station-timer' + (paused ? ' fdp-station-timer--paused' : '');
       box.innerHTML = '<div class="fdp-station-timer__row">'
-        + '<div><p class="fdp-station-timer__label"><span class="fdp-station-timer__dot"></span>' + t('label') + '</p>'
+        + '<div><p class="fdp-station-timer__label">' + (paused ? '&#10073;&#10073; ' + t('paused') : '<span class="fdp-station-timer__dot"></span>' + t('label')) + '</p>'
         + '<p class="fdp-station-timer__time" data-part="time"></p></div>'
         + '<div><p class="fdp-station-timer__label" style="text-align:right">' + t('cost') + '</p>'
         + '<p class="fdp-station-timer__cost" data-part="cost"></p></div>'
         + '</div>'
-        + '<p class="fdp-station-timer__next">' + t('next') + ' <span data-part="next"></span></p>';
+        + (paused
+          ? '<p class="fdp-station-timer__next">' + t('pausedText') + '<span data-part="next" hidden></span></p>'
+          : '<p class="fdp-station-timer__next">' + t('next') + ' <span data-part="next"></span></p>');
     }
 
     box.querySelector('[data-part="time"]').textContent = duration(elapsed);
@@ -141,8 +151,7 @@
       if (!response.ok) return;
       const data = await response.json();
       clockOffset = data.serverNow - Date.now();
-      const changed = data.status !== station.status || data.startedAt !== station.startedAt;
-      station = data;
+      const changed = data.status !== station.status || data.startedAt !== station.startedAt;      station = data;
       render();
       if (changed) {
         window.dispatchEvent(new CustomEvent('fdp-station-status', { detail: { status: data.status } }));
