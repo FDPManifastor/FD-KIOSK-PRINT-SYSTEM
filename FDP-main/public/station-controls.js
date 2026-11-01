@@ -114,7 +114,7 @@
     }
 
     const label = { idle: 'Uit', active: 'Aan', paused: 'Pauze', stopped: 'Afrekenen' }[station.status] || station.status;
-    const head = '<div class="st-head"><span>Gebruikstijd</span><span class="st-badge">'
+    const head = '<div class="st-head"><span>Tijd · excl. printen</span><span class="st-badge">'
       + (station.status === 'active' ? '<span class="st-dot"></span>' : '') + label + '</span></div>';
 
     if (station.status === 'idle') {
@@ -130,7 +130,7 @@
     if (station.status === 'stopped') {
       return {
         cls: 'st-panel st-panel--stopped',
-        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' · te betalen</p>'
+        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' · te betalen</p><p class="st-sub" style="margin-top:-.4rem">Alleen tijd · excl. printen</p>'
           + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + button('reset', folder, 'st-clear', 'Betaald') + '</div>'
       };
     }

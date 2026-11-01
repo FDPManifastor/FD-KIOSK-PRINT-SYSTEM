@@ -16,7 +16,8 @@
       endedText: 'Betaal bij de balie',
       total: 'Totaal',
       paused: 'Gepauzeerd',
-      pausedText: 'De tijd staat stil'
+      pausedText: 'De tijd staat stil',
+      scope: 'Opstartkosten + computergebruik · excl. printen'
     },
     en: {
       label: 'Time used',
@@ -26,7 +27,8 @@
       endedText: 'Please pay at the counter',
       total: 'Total',
       paused: 'Paused',
-      pausedText: 'The clock is stopped'
+      pausedText: 'The clock is stopped',
+      scope: 'Start-up fee + computer use · excl. printing'
     }
   };
 
@@ -82,6 +84,7 @@
     '.fdp-station-timer__time{margin:.15rem 0 0;font-size:2.25rem;font-weight:800;line-height:1}',
     '.fdp-station-timer__cost{margin:.15rem 0 0;font-size:2.25rem;font-weight:800;line-height:1;color:#fca5a5;text-align:right}',
     '.fdp-station-timer__next{margin:.65rem 0 0;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7)}',
+    '.fdp-station-timer__scope{margin:.35rem 0 0;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.18);font-size:.72rem;font-weight:700;color:rgba(255,255,255,.75)}',
     '.fdp-station-timer--ended{background:rgba(185,28,28,.96)}',
     '.fdp-station-timer--ended .fdp-station-timer__cost{color:#fff}',
     '.fdp-station-timer--paused{background:rgba(180,83,9,.95)}',
@@ -117,7 +120,8 @@
         + '<div><p class="fdp-station-timer__label" style="text-align:right">' + t('total') + '</p>'
         + '<p class="fdp-station-timer__cost">' + euro(station.costCents) + '</p></div>'
         + '</div>'
-        + '<p class="fdp-station-timer__next" style="color:#fff">' + t('endedText') + '</p>';
+        + '<p class="fdp-station-timer__next" style="color:#fff">' + t('endedText') + '</p>'
+        + '<p class="fdp-station-timer__scope">' + t('scope') + '</p>';
       return;
     }
 
@@ -138,7 +142,8 @@
         + '</div>'
         + (paused
           ? '<p class="fdp-station-timer__next">' + t('pausedText') + '<span data-part="next" hidden></span></p>'
-          : '<p class="fdp-station-timer__next">' + t('next') + ' <span data-part="next"></span></p>');
+          : '<p class="fdp-station-timer__next">' + t('next') + ' <span data-part="next"></span></p>')
+        + '<p class="fdp-station-timer__scope">' + t('scope') + '</p>';
     }
 
     box.querySelector('[data-part="time"]').textContent = duration(elapsed);

@@ -20,6 +20,7 @@
       endedTitle: 'Je sessie is afgelopen',
       endedText: 'Betaal bij de balie en noem computer {computer}. Wil je de computer opnieuw gebruiken? Vraag een van onze medewerkers.',
       due: 'Te betalen',
+      dueScope: 'Opstartkosten + computergebruik, excl. printen',
       computer: 'Computer'
     },
     en: {
@@ -28,6 +29,7 @@
       endedTitle: 'Your session has ended',
       endedText: 'Please pay at the counter and mention computer {computer}. Want to use the computer again? Ask one of our staff members.',
       due: 'Amount due',
+      dueScope: 'Start-up fee + computer use, excl. printing',
       computer: 'Computer'
     }
   };
@@ -47,6 +49,7 @@
     '.fdp-lock-banner__due{flex:none;text-align:right}',
     '.fdp-lock-banner__due small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}',
     '.fdp-lock-banner__due strong{font-size:2rem;font-weight:900;color:#991b1b}',
+    '.fdp-lock-banner__due em{display:block;max-width:12rem;font-style:normal;font-size:.72rem;font-weight:600;line-height:1.3;color:#7f1d1d}',
     '#prijzenModal.fdp-locked .close-btn{display:none}',
     'body.fdp-kiosk-locked .fdp-guide,body.fdp-kiosk-locked .fdp-pointer,body.fdp-kiosk-locked .fdp-station-timer{display:none !important}',
     '#prijzenModal.fdp-locked{cursor:default}',
@@ -83,7 +86,7 @@
       + '<div><p class="fdp-lock-banner__title">' + (ended ? t.endedTitle : t.lockedTitle) + '</p>'
       + '<p class="fdp-lock-banner__text">' + (ended ? t.endedText : t.lockedText).replace('{computer}', '<strong>' + computerLabel + '</strong>') + '</p></div>'
       + (computerLabel ? '<div class="fdp-lock-banner__pc"><small>' + t.computer + '</small><strong>' + computerLabel + '</strong></div>' : '')
-      + (ended ? '<div class="fdp-lock-banner__due"><small>' + t.due + '</small><strong>' + euro(station.costCents) + '</strong></div>' : '');
+      + (ended ? '<div class="fdp-lock-banner__due"><small>' + t.due + '</small><strong>' + euro(station.costCents) + '</strong><em>' + t.dueScope + '</em></div>' : '');
   }
 
   function lock(station) {
