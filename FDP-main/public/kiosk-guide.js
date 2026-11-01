@@ -69,6 +69,7 @@
     '.fdp-pointer{position:fixed;z-index:9001;pointer-events:none;display:flex;flex-direction:column;align-items:center;',
     'transform:translate(-50%,-100%);font-family:Manrope,system-ui,sans-serif}',
     '.fdp-pointer[hidden]{display:none}',
+    '.fdp-pointer{transition:opacity .4s ease}.fdp-pointer.is-fading{opacity:0}',
     '.fdp-pointer__bubble{background:#dc2626;color:#fff;font-weight:800;font-size:1rem;line-height:1.2;padding:.55rem .9rem;',
     'border-radius:.9rem;box-shadow:0 12px 28px rgba(220,38,38,.45);white-space:nowrap;text-align:center;animation:fdpPointerPop .4s ease-out}',
     '.fdp-pointer__bubble small{display:block;font-size:.72rem;font-weight:600;opacity:.9}',
@@ -103,6 +104,9 @@
   let newestFile = '';
   let pointerTarget = null;
   let pointerKey = '';
+  let pointerUntil = 0; // tot wanneer 'Klik hier om te printen' zichtbaar is
+  const pointerVisibleMs = 6000;
+  const startedAt = Date.now(); // bestanden die bij het openen al in de lijst staan zijn niet 'nieuw'
   let hideTimer = null;
   const guideVisibleMs = 5000;
 
@@ -199,14 +203,16 @@
 
     if (added.length) {
       newestFile = added[added.length - 1];
-      const item = items[names.indexOf(newestFile)];
-      if (item && item.scrollIntoView) item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Wijs 6 seconden lang naar de afbeelding linksboven in het album,
+      // alleen bij een echte nieuwe upload (niet bij het eerste laden van de lijst).
+      if (Date.now() - startedAt > 3500) pointerUntil = Date.now() + pointerVisibleMs;
+      if (items[0] && items[0].scrollIntoView) items[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
   function findPrintButton() {
     const items = Array.from(document.querySelectorAll('#files-list .upload-item[data-encoded-file]'));
-    const item = items.find(function (el) { return el.getAttribute('data-encoded-file') === newestFile; }) || items[0];
+    const item = items[0]; // de tegel linksboven
     return item ? item.querySelector('.file-actions-row button') : null;
   }
 
@@ -243,20 +249,27 @@
   }
 
   function updatePointer(step) {
-    const button = step === 'arrived' ? findPrintButton() : null;
+    const showPointer = step === 'arrived' && Date.now() < pointerUntil;
+    const button = showPointer ? findPrintButton() : null;
     setPointerTarget(button);
 
     if (!button) {
-      pointer.hidden = true;
+      if (!pointer.hidden && !pointer.classList.contains('is-fading')) {
+        pointer.classList.add('is-fading');
+        setTimeout(function () { pointer.hidden = true; pointer.classList.remove('is-fading'); }, 400);
+      }
       pointerKey = '';
       return;
     }
 
-    const key = newestFile + '-' + lang();
+    pointer.classList.remove('is-fading');
+    const item = button.closest('.upload-item');
+    const targetName = item ? item.getAttribute('data-encoded-file') : newestFile;
+    const key = targetName + '-' + lang();
     if (key !== pointerKey) {
       pointerKey = key;
       pointer.innerHTML = '<div class="fdp-pointer__bubble">' + t('pointerTitle')
-        + '<small>' + escapeHtml(decodeName(newestFile)) + '</small></div>'
+        + '<small>' + escapeHtml(decodeName(targetName)) + '</small></div>'
         + '<svg class="fdp-pointer__arrow" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22 3 11h5V2h8v9h5z"/></svg>';
     }
     positionPointer();
