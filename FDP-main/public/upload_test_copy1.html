@@ -147,6 +147,20 @@
     </div>
    </div>
   </div>
+  <div id="locked-overlay" class="gc-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="locked-title">
+   <div class="gc-card">
+    <div class="gc-head" style="background:#dc2626">
+     <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round"></path></svg>
+     <span id="locked-head">Upload niet gelukt</span>
+    </div>
+    <div class="gc-body">
+     <h3 id="locked-title" class="gc-title">Computer nog niet geactiveerd</h3>
+     <p id="locked-text" class="gc-text">Vraag een van onze medewerkers om computer <strong>TEST COPY 1</strong> te activeren. Probeer het daarna opnieuw.</p>
+     <button id="locked-retry" type="button" class="gc-btn">Opnieuw proberen</button>
+     <button id="locked-close" type="button" class="gc-link">Sluiten</button>
+    </div>
+   </div>
+  </div>
   <script>
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
@@ -185,6 +199,11 @@
                 goComputerText: 'Je bestand staat klaar op de computer van <strong>TEST COPY 1</strong>. Klik daar bij je bestand op de groene knop <strong>Print</strong>.',
                 goComputerClose: 'Begrepen',
                 goComputerMore: 'Nog een bestand uploaden',
+                lockedHead: 'Upload niet gelukt',
+                lockedTitle: 'Computer nog niet geactiveerd',
+                lockedText: 'Vraag een van onze medewerkers om computer <strong>TEST COPY 1</strong> te activeren. Probeer het daarna opnieuw.',
+                lockedRetry: 'Opnieuw proberen',
+                lockedClose: 'Sluiten',
                 filesSectionTitle: 'Bestanden in TEST COPY 1',
                 filesSectionSubtext: 'Klik op Download om direct jouw bestand op te halen.',
                 newSessionButton: 'Uploader klaar - start nieuwe sessie',
@@ -223,6 +242,11 @@
                 goComputerText: 'Your file is ready on the <strong>TEST COPY 1</strong> computer. Click the green <strong>Print</strong> button next to your file there.',
                 goComputerClose: 'Got it',
                 goComputerMore: 'Upload another file',
+                lockedHead: 'Upload failed',
+                lockedTitle: 'Computer not activated yet',
+                lockedText: 'Please ask one of our staff members to activate computer <strong>TEST COPY 1</strong>, then try again.',
+                lockedRetry: 'Try again',
+                lockedClose: 'Close',
                 filesSectionTitle: 'Files in TEST COPY 1',
                 filesSectionSubtext: 'Click Download to open your file directly.',
                 newSessionButton: 'Uploader done - start new session',
@@ -284,6 +308,11 @@
             document.getElementById('go-computer-text').innerHTML = t('goComputerText');
             document.getElementById('go-computer-close').textContent = t('goComputerClose');
             document.getElementById('go-computer-more').textContent = t('goComputerMore');
+            document.getElementById('locked-head').textContent = t('lockedHead');
+            document.getElementById('locked-title').textContent = t('lockedTitle');
+            document.getElementById('locked-text').innerHTML = t('lockedText');
+            document.getElementById('locked-retry').textContent = t('lockedRetry');
+            document.getElementById('locked-close').textContent = t('lockedClose');
         }
 
         // --- Auto-gids op de telefoon ---
@@ -298,6 +327,18 @@
                 num.textContent = step < activeStep ? '✓' : String(step);
             });
         }
+
+        const lockedOverlay = document.getElementById('locked-overlay');
+        function showLocked() {
+            lockedOverlay.hidden = false;
+            if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+        }
+        document.getElementById('locked-close').addEventListener('click', () => { lockedOverlay.hidden = true; });
+        document.getElementById('locked-retry').addEventListener('click', () => {
+            lockedOverlay.hidden = true;
+            fileInput.value = '';
+            fileInput.click();
+        });
 
         function showGoComputer() {
             setGuideStep(3);
@@ -585,6 +626,11 @@
                     setSessionStatus(t('uploadSuccessStatus') + ' (' + selectedFiles.length + ')');
                     showGoComputer();
                     await loadFiles();
+                } else if (res.status === 423) {
+                    // Station staat uit: duidelijke pop-up in plaats van een klein foutregeltje.
+                    setGuideStep(1);
+                    setSessionStatus('');
+                    showLocked();
                 } else {
                     setGuideStep(1);
                     setSessionStatus(await extractUploadError(res), true);

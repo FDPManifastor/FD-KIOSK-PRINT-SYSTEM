@@ -367,7 +367,16 @@
   window.addEventListener('fdp-station-status', function (event) {
     render();
     // Na activeren: toon de eerste stap opnieuw, die viel weg achter de vergrendeling.
-    if (event.detail && event.detail.status === 'active') showGuide();
+    if (event.detail && event.detail.status === 'active') {
+      // Wacht tot de klant een taal heeft gekozen, zodat de pop-ups niet overlappen.
+      setTimeout(function () {
+        if (document.body.classList.contains('fdp-choosing-language')) {
+          window.addEventListener('fdp-language-chosen', function () { lastRenderKey = ''; render(); showGuide(); }, { once: true });
+        } else {
+          showGuide();
+        }
+      }, 0);
+    }
   });
   window.addEventListener('scroll', function () { if (guide.classList.contains('is-visible')) positionGuide(); }, true);
   window.addEventListener('resize', positionGuide);

@@ -29,6 +29,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 - Lock (test station only, `kiosk-lock.js`): while the station is off or finished, the kiosk shows the price list with "ask a staff member to activate", which cannot be closed, and uploads to that station are refused. Activating removes the lock and clears the previous customer's files.
 - Touchscreen mode (test station only, `kiosk-touch.js`): tap a file to preview it, large buttons (Print as main button, Delete separate), large confirm dialogs instead of browser pop-ups, no zoom/text selection/long-press menu, tap feedback and smooth animations.
 - Album layout (test station only, `kiosk-album.js`): the instructions column moves into a pop-up opened by a ringing, glowing button; the uploads column is twice as wide and shows files as a thumbnail grid (`/thumb/:folder/:file`, 320 px via sharp, falls back to the original image).
+- Language choice (test station only, `kiosk-language.js`): when the computer is activated and the price list disappears, a Dutch/English pop-up appears; the step pop-up follows after the choice. On the phone, an upload to an inactive computer shows a clear "not activated" pop-up.
 - To roll out to another station: add the folder to `STATION_TIMER_FOLDERS` and add `<script src="/station-timer.js"></script>` and `<script src="/kiosk-guide.js"></script>` at the end of its `files_*.html` page.
 
 ## Docker

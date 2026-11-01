@@ -109,6 +109,8 @@
     document.body.classList.remove('fdp-kiosk-locked');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = previousOverflow || '';
+    // Laat andere onderdelen (bijv. de taalkeuze) weten dat de computer net is geactiveerd.
+    window.dispatchEvent(new CustomEvent('fdp-kiosk-unlocked'));
   }
 
   function update() {
