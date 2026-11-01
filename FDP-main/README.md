@@ -30,6 +30,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 - Touchscreen mode (all stations, `kiosk-touch.js`): tap a file to preview it, large buttons (Print as main button, Delete separate), large confirm dialogs instead of browser pop-ups, no zoom/text selection/long-press menu, tap feedback and smooth animations.
 - Album layout (all stations, `kiosk-album.js`): the instructions column moves into a pop-up opened by a ringing, glowing button; the uploads column is twice as wide and shows files as a thumbnail grid (`/thumb/:folder/:file`, 320 px via sharp, falls back to the original image).
 - Language choice (all stations, `kiosk-language.js`): when the computer is activated and the price list disappears, a Dutch/English pop-up appears; the step pop-up follows after the choice. On the phone, an upload to an inactive computer shows a clear "not activated" pop-up.
+- Impose image size (test station only, `kiosk-impose.js`): Passend (whole image in proportion, 5-100%), Vullen (fill and crop) or Vrij formaat (width and height separately, may stretch), plus a "Passend maken" reset. The print layout in `files-page.js` uses these settings when present.
 - New features are built on the test pages (`files_test_copy1.html`, `upload_test_copy1.html`) first. The station pages are copies of those with only the station name and folder replaced (and without the TEST MODE label), so a change is rolled out by regenerating them from the test pages. Run `python3 tools/rollout_stations.py public` from `FDP-main`.
 
 ## Docker

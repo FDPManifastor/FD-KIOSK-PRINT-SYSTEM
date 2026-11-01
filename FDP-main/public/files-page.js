@@ -1059,6 +1059,12 @@
       const fitToFrame = settings.fitToFrame !== false;
       const paperSize = settings.paperSize === 'A3' ? 'A3' : 'A4';
       const orientation = settings.orientation === 'landscape' ? 'landscape' : 'portrait';
+      // Optioneel (Impose-schaalopties): 'fit' = passend met grootte %, 'fill' = vullen,
+      // 'free' = vrij formaat met eigen breedte/hoogte %. Zonder deze velden: oude werking.
+      const scaleMode = ['fit', 'fill', 'free'].includes(settings.scaleMode) ? settings.scaleMode : '';
+      const scalePct = clamp(Number(settings.scalePct) || 100, 5, 100);
+      const freeWidthPct = clamp(Number(settings.freeWidthPct) || 100, 5, 100);
+      const freeHeightPct = clamp(Number(settings.freeHeightPct) || 100, 5, 100);
 
       return {
         imageUrl,
@@ -1067,6 +1073,10 @@
         paperSize,
         orientation,
         preset,
+        scaleMode,
+        scalePct,
+        freeWidthPct,
+        freeHeightPct,
         label: settings.presetLabel || settings.presetId || 'Layout'
       };
     }
@@ -1080,9 +1090,20 @@
           ? 'width:' + Math.round(layout.preset.tileScale * 100) + '%;height:' + Math.round(layout.preset.tileScale * 100) + '%;'
           : 'width:100%;height:100%;';
 
+        let imageStyle = 'object-fit:' + (layout.fitToFrame ? 'cover' : 'contain') + ';';
+        if (layout.scaleMode === 'fit') {
+          imageStyle = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);object-fit:contain;'
+            + 'width:' + layout.scalePct + '%;height:' + layout.scalePct + '%;';
+        } else if (layout.scaleMode === 'free') {
+          imageStyle = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);object-fit:fill;'
+            + 'width:' + layout.freeWidthPct + '%;height:' + layout.freeHeightPct + '%;';
+        } else if (layout.scaleMode === 'fill') {
+          imageStyle = 'object-fit:cover;';
+        }
+
         cells += '<div class="slot-wrap">'
           + '<div class="slot" style="' + tileStyle + '">'
-          + '<img src="' + escapeHtml(layout.imageUrl) + '" alt="Imposition image" style="object-fit:' + (layout.fitToFrame ? 'cover' : 'contain') + ';">'
+          + '<img src="' + escapeHtml(layout.imageUrl) + '" alt="Imposition image" style="' + imageStyle + '">'
           + '</div>'
           + '</div>';
       }
@@ -1123,7 +1144,7 @@
         + '.sheet{background:#fff;box-shadow:0 0 0 1px rgba(15,23,42,.18);padding:6mm;box-sizing:border-box;display:block;}'
         + '.sheet-grid{width:100%;height:100%;display:grid;gap:2.5mm;}'
         + '.slot-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;}'
-        + '.slot{overflow:hidden;border:1px solid #d4d4d8;background:#fafafa;}'
+        + '.slot{position:relative;overflow:hidden;border:1px solid #d4d4d8;background:#fafafa;}'
         + '.slot img{display:block;width:100%;height:100%;}'
         + '@media print{html,body{background:#fff;} .print-page{padding:0;min-height:auto;align-items:flex-start;justify-content:center;} .sheet{box-shadow:none;}}'
         + '</style></head><body>'
