@@ -977,6 +977,189 @@ app.delete('/delete-all/:folder', (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Station timer (computer vrijgeven vanuit de backoffice)
+//
+// De backoffice start per station een sessie; het kioskscherm toont dan de
+// verstreken tijd en de kosten rechtsonder. Tarief: EUR 0,95 voor de eerste
+// 10 minuten, daarna EUR 0,95 per begonnen 5 minuten.
+// Welke stations meedoen staat in STATION_TIMER_FOLDERS (komma-gescheiden),
+// standaard alleen de teststation.
+// ---------------------------------------------------------------------------
+const stationPricing = {
+  baseCents: 95,
+  baseMinutes: 10,
+  stepCents: 95,
+  stepMinutes: 5
+};
+const timerFolders = (process.env.STATION_TIMER_FOLDERS || 'test_copy1')
+  .split(',')
+  .map((folder) => folder.trim())
+  .filter((folder) => isValidFolder(folder));
+const stationStateFile = path.join('uploads', '.station-sessions.json');
+const stationSessions = new Map();
+
+function stationLabel(folder) {
+  if (folder.startsWith('test_')) return 'TEST ' + folder.replace('test_', '').replace('copy', 'COPY ');
+  if (folder.startsWith('utrecht_')) return 'UTRECHT ' + folder.replace('utrecht_', '').replace('copy', 'COPY ');
+  if (folder.startsWith('hoogvliet_')) return 'HOOGVLIET ' + folder.replace('hoogvliet_', '').replace('copy', 'COPY ');
+  return 'AMSTERDAM ' + folder.replace('copy', 'COPY ');
+}
+
+function calculateStationCostCents(elapsedMs) {
+  const baseMs = stationPricing.baseMinutes * 60 * 1000;
+  const stepMs = stationPricing.stepMinutes * 60 * 1000;
+  const extraSteps = elapsedMs > baseMs ? Math.ceil((elapsedMs - baseMs) / stepMs) : 0;
+  return stationPricing.baseCents + extraSteps * stationPricing.stepCents;
+}
+
+function loadStationSessions() {
+  try {
+    if (!fs.existsSync(stationStateFile)) return;
+    const saved = JSON.parse(fs.readFileSync(stationStateFile, 'utf8'));
+    Object.entries(saved || {}).forEach(([folder, session]) => {
+      if (timerFolders.includes(folder) && session && Number.isFinite(session.startedAt)) {
+        stationSessions.set(folder, session);
+      }
+    });
+  } catch (error) {
+    console.warn('Station-sessies konden niet geladen worden:', error.message);
+  }
+}
+
+function saveStationSessions() {
+  try {
+    fs.writeFileSync(stationStateFile, JSON.stringify(Object.fromEntries(stationSessions), null, 2));
+  } catch (error) {
+    console.warn('Station-sessies konden niet opgeslagen worden:', error.message);
+  }
+}
+
+function describeStation(folder) {
+  const session = stationSessions.get(folder) || null;
+  const now = Date.now();
+  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: stationPricing };
+
+  if (!session) return { ...base, status: 'idle' };
+
+  const endedAt = session.stoppedAt || now;
+  const elapsedMs = Math.max(0, endedAt - session.startedAt);
+  return {
+    ...base,
+    status: session.stoppedAt ? 'stopped' : 'active',
+    startedAt: session.startedAt,
+    stoppedAt: session.stoppedAt || null,
+    elapsedMs,
+    costCents: calculateStationCostCents(elapsedMs)
+  };
+}
+
+// Zolang BACKOFFICE_PASSWORD niet is ingesteld, is de backoffice open
+// (tijdelijk, voor het testen). Zet het wachtwoord voordat de timer op de
+// echte stations aan gaat.
+function backofficePasswordRequired() {
+  return Boolean(process.env.BACKOFFICE_PASSWORD);
+}
+
+function requireBackoffice(req, res) {
+  const expected = process.env.BACKOFFICE_PASSWORD || '';
+  if (!expected) return true;
+
+  const given = String(req.get('x-backoffice-key') || '');
+  const expectedHash = crypto.createHash('sha256').update(expected).digest();
+  const givenHash = crypto.createHash('sha256').update(given).digest();
+  if (!crypto.timingSafeEqual(expectedHash, givenHash)) {
+    res.status(401).json({ error: 'Onjuist backoffice-wachtwoord.' });
+    return false;
+  }
+  return true;
+}
+
+function requireTimerFolder(req, res) {
+  const folder = req.params.folder;
+  if (!timerFolders.includes(folder)) {
+    res.status(404).json({ error: 'Timer is niet actief voor dit station.' });
+    return null;
+  }
+  return folder;
+}
+
+loadStationSessions();
+
+// Public status, polled by the kiosk screen of that station.
+app.get('/station/status/:folder', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const folder = req.params.folder;
+  if (!timerFolders.includes(folder)) {
+    return res.json({ folder, status: 'disabled', serverNow: Date.now() });
+  }
+  return res.json(describeStation(folder));
+});
+
+app.get('/backoffice', (req, res) => {
+  res.sendFile(path.join(publicDir, 'backoffice.html'));
+});
+
+app.get('/backoffice/api/config', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ passwordRequired: backofficePasswordRequired() });
+});
+
+app.get('/backoffice/api/stations', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  if (!requireBackoffice(req, res)) return;
+  return res.json({ stations: timerFolders.map(describeStation), serverNow: Date.now() });
+});
+
+app.post('/backoffice/api/stations/:folder/start', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const folder = requireTimerFolder(req, res);
+  if (!folder) return;
+
+  const current = stationSessions.get(folder);
+  if (current && !current.stoppedAt) {
+    return res.status(409).json({ error: 'Deze computer is al vrijgegeven.', station: describeStation(folder) });
+  }
+
+  stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null });
+  saveStationSessions();
+  console.log(`Station ${folder} vrijgegeven.`);
+  return res.json({ ok: true, station: describeStation(folder) });
+});
+
+app.post('/backoffice/api/stations/:folder/stop', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const folder = requireTimerFolder(req, res);
+  if (!folder) return;
+
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt) {
+    return res.status(409).json({ error: 'Deze computer heeft geen lopende sessie.', station: describeStation(folder) });
+  }
+
+  current.stoppedAt = Date.now();
+  saveStationSessions();
+  const station = describeStation(folder);
+  console.log(`Station ${folder} gestopt na ${Math.round(station.elapsedMs / 1000)}s, kosten ${station.costCents} cent.`);
+  return res.json({ ok: true, station });
+});
+
+// Clears a finished session so the kiosk no longer shows the final amount.
+app.post('/backoffice/api/stations/:folder/reset', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const folder = requireTimerFolder(req, res);
+  if (!folder) return;
+
+  const current = stationSessions.get(folder);
+  if (current && !current.stoppedAt) {
+    return res.status(409).json({ error: 'Stop eerst de lopende sessie.', station: describeStation(folder) });
+  }
+
+  stationSessions.delete(folder);
+  saveStationSessions();
+  return res.json({ ok: true, station: describeStation(folder) });
+});
+
 // Browser page
 app.get('/browser', (req, res) => {
   res.send(`<!DOCTYPE html><html><head><title>File Browser</title><style>body{font-family:Arial;margin:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;padding:20px;border-radius:8px}h1{color:#333}.folder-section{margin:20px 0;padding:15px;border:1px solid #ddd;border-radius:5px;background:#fafafa}.folder-title{font-weight:bold;font-size:18px;color:#dc2626;margin-bottom:10px}.file-list{list-style:none;padding:0}.file-item{padding:8px;margin:5px 0;background:#fff;border-left:3px solid #dc2626;display:flex;justify-content:space-between;align-items:center}.download-btn{background:#dc2626;color:#fff;padding:5px 15px;border:none;border-radius:4px;cursor:pointer;text-decoration:none}.download-btn:hover{background:#b91c1c}.empty{color:#999;font-style:italic}</style></head><body><div class="container"><h1>📁 FD Printing - Files</h1><div id="content"></div></div><script>async function load(){const folders=${JSON.stringify(validFolders)};const el=document.getElementById('content');for(const f of folders){try{const r=await fetch('/files/'+f);const d=await r.json();const label=(f.startsWith('utrecht_')||f.startsWith('hoogvliet_'))?f.replaceAll('_',' ').toUpperCase():'COPY '+f.replace('copy','');let h='<div class="folder-section"><div class="folder-title">'+label+'</div>';if(d.files.length===0){h+='<p class="empty">No files</p>'}else{h+='<ul class="file-list">';d.files.forEach(file=>{h+='<li class="file-item"><span>'+file+'</span><a href="/download/'+f+'/'+file+'" class="download-btn">Download</a></li>'});h+='</ul>'}h+='</div>';el.innerHTML+=h}catch(e){el.innerHTML+='<p>Error: '+e.message+'</p>'}}}load()</script></body></html>`);

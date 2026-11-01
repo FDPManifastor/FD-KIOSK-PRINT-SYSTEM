@@ -1,0 +1,325 @@
+// Auto-gids voor het kioskscherm: toont onderin steeds de volgende stap
+// en licht het onderdeel op waar de klant nu moet klikken.
+// Laden NA files-page.js, zodat de print- en voorbeeldfuncties bestaan.
+(function () {
+  const texts = {
+    nl: {
+      next: 'Volgende stap',
+      scanTitle: 'Scan de QR-code met je telefoon',
+      scanText: 'Open de link en upload je bestand. Het verschijnt daarna vanzelf hier op het scherm.',
+      arrivedTitle: 'Je bestand is binnen!',
+      arrivedText: 'Klik op de groene knop Print waar de rode pijl naar wijst. Eerst bekijken? Klik op Voorbeeld.',
+      previewTitle: 'Controleer het voorbeeld',
+      previewText: 'Ziet het er goed uit? Klik op de groene knop Print.',
+      printedTitle: 'Kies je printer en klik op Afdrukken',
+      printedText: 'Klaar met printen? Klik op Nieuwe sessie zodat je bestanden worden verwijderd.',
+      endedTitle: 'Bedankt!',
+      endedText: 'Je sessie is gestopt. Rond af en betaal bij de balie.',
+      pointerTitle: 'Klik hier om te printen'
+    },
+    en: {
+      next: 'Next step',
+      scanTitle: 'Scan the QR code with your phone',
+      scanText: 'Open the link and upload your file. It will appear here on the screen automatically.',
+      arrivedTitle: 'Your file has arrived!',
+      arrivedText: 'Click the green Print button the red arrow points to. Want to check first? Click Preview.',
+      previewTitle: 'Check the preview',
+      previewText: 'Looks good? Click the green Print button.',
+      printedTitle: 'Choose your printer and click Print',
+      printedText: 'Done printing? Click New session so your files are deleted.',
+      endedTitle: 'Thank you!',
+      endedText: 'Your session has ended. Please pay at the counter.',
+      pointerTitle: 'Click here to print'
+    }
+  };
+
+  const steps = ['scan', 'arrived', 'preview', 'printed'];
+
+  const style = document.createElement('style');
+  style.textContent = [
+    'body{padding-bottom:9rem}',
+    '.fdp-guide{position:fixed;left:1.25rem;bottom:1.25rem;z-index:8999;max-width:min(36rem,calc(100vw - 20rem));',
+    'display:flex;gap:1rem;align-items:center;border-radius:1.25rem;background:#fff;color:#18181b;padding:1rem 1.25rem;',
+    'box-shadow:0 20px 50px rgba(0,0,0,.25);border:2px solid #dc2626;font-family:Manrope,system-ui,sans-serif}',
+    '.fdp-guide[hidden]{display:none}',
+    '.fdp-guide--pop{animation:fdpGuidePop .5s ease-out}',
+    '@keyframes fdpGuidePop{0%{transform:translateY(16px);opacity:0}60%{transform:translateY(-4px);opacity:1}100%{transform:translateY(0)}}',
+    '.fdp-guide__num{flex:none;width:3rem;height:3rem;border-radius:999px;background:#dc2626;color:#fff;display:flex;',
+    'align-items:center;justify-content:center;font-size:1.4rem;font-weight:800}',
+    '.fdp-guide__eyebrow{margin:0;font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#dc2626}',
+    '.fdp-guide__title{margin:.1rem 0 0;font-size:1.25rem;font-weight:800;line-height:1.2}',
+    '.fdp-guide__text{margin:.25rem 0 0;font-size:.95rem;color:#3f3f46;line-height:1.4}',
+    '.fdp-guide__dots{display:flex;gap:.35rem;margin-top:.6rem}',
+    '.fdp-guide__dot{width:1.6rem;height:.3rem;border-radius:999px;background:#e4e4e7}',
+    '.fdp-guide__dot--done{background:#dc2626}',
+    '.fdp-guide-focus{position:relative;outline:4px solid #f59e0b !important;outline-offset:4px;border-radius:1rem;',
+    'animation:fdpGuideFocus 1.4s ease-in-out infinite}',
+    '@keyframes fdpGuideFocus{0%,100%{outline-color:#f59e0b}50%{outline-color:rgba(245,158,11,.25)}}',
+    '@media (max-width:900px){.fdp-guide{max-width:calc(100vw - 2.5rem);bottom:8.5rem}}',
+    // Pointer: bewegende pijl met tekstballon boven de Print-knop van het bestand.
+    '.fdp-pointer{position:fixed;z-index:9001;pointer-events:none;display:flex;flex-direction:column;align-items:center;',
+    'transform:translate(-50%,-100%);font-family:Manrope,system-ui,sans-serif}',
+    '.fdp-pointer[hidden]{display:none}',
+    '.fdp-pointer__bubble{background:#dc2626;color:#fff;font-weight:800;font-size:1rem;line-height:1.2;padding:.55rem .9rem;',
+    'border-radius:.9rem;box-shadow:0 12px 28px rgba(220,38,38,.45);white-space:nowrap;text-align:center;animation:fdpPointerPop .4s ease-out}',
+    '.fdp-pointer__bubble small{display:block;font-size:.72rem;font-weight:600;opacity:.9}',
+    '.fdp-pointer__arrow{width:2.6rem;height:2.6rem;color:#dc2626;margin-top:-.1rem;filter:drop-shadow(0 6px 10px rgba(220,38,38,.35));',
+    'animation:fdpPointerBounce .9s ease-in-out infinite}',
+    '@keyframes fdpPointerBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}',
+    '@keyframes fdpPointerPop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}',
+    '.fdp-print-target{position:relative;box-shadow:0 0 0 0 rgba(22,163,74,.7);animation:fdpPrintRing 1.4s ease-out infinite}',
+    '@keyframes fdpPrintRing{0%{box-shadow:0 0 0 0 rgba(22,163,74,.7)}100%{box-shadow:0 0 0 14px rgba(22,163,74,0)}}',
+    '@media (prefers-reduced-motion:reduce){.fdp-pointer__arrow,.fdp-print-target,.fdp-guide-focus{animation:none}}'
+  ].join('');
+  document.head.appendChild(style);
+
+  const guide = document.createElement('div');
+  guide.className = 'fdp-guide';
+  guide.setAttribute('role', 'status');
+  guide.setAttribute('aria-live', 'polite');
+  document.body.appendChild(guide);
+
+  const pointer = document.createElement('div');
+  pointer.className = 'fdp-pointer';
+  pointer.hidden = true;
+  pointer.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(pointer);
+
+  let printed = false;
+  let previewOpened = false;
+  let lastFileCount = 0;
+  let lastRenderKey = '';
+  let focusedElement = null;
+  let knownFiles = null;
+  let newestFile = '';
+  let pointerTarget = null;
+  let pointerKey = '';
+
+  function lang() {
+    try {
+      return localStorage.getItem('fdp-lang') === 'en' ? 'en' : 'nl';
+    } catch (error) {
+      return 'nl';
+    }
+  }
+
+  function t(key) {
+    return texts[lang()][key];
+  }
+
+  function fileCount() {
+    return document.querySelectorAll('#files-list .upload-item').length;
+  }
+
+  function previewVisible() {
+    const preview = document.getElementById('preview-content');
+    return Boolean(preview && !preview.classList.contains('hidden'));
+  }
+
+  function stationStatus() {
+    return window.FDPStationTimer ? window.FDPStationTimer.getStatus() : 'disabled';
+  }
+
+  function currentStep() {
+    if (stationStatus() === 'stopped') return 'ended';
+
+    const count = fileCount();
+    if (count === 0) {
+      printed = false;
+      previewOpened = false;
+      lastFileCount = 0;
+      return 'scan';
+    }
+
+    // A new upload arrived: start the flow for that file again.
+    if (count > lastFileCount) {
+      printed = false;
+      previewOpened = false;
+    }
+    lastFileCount = count;
+
+    if (printed) return 'printed';
+    if (previewOpened && previewVisible()) return 'preview';
+    return 'arrived';
+  }
+
+  function focusTarget(step) {
+    if (step === 'scan') {
+      const qr = document.getElementById('qr-image');
+      return qr ? qr.parentElement : null;
+    }
+    if (step === 'arrived') return null; // de pijl wijst hier al naar de Print-knop
+    if (step === 'preview') return document.getElementById('preview-print-btn');
+    if (step === 'printed') return document.getElementById('new-session-btn');
+    return null;
+  }
+
+  function setFocus(element) {
+    if (focusedElement === element) return;
+    if (focusedElement) focusedElement.classList.remove('fdp-guide-focus');
+    focusedElement = element;
+    if (focusedElement) focusedElement.classList.add('fdp-guide-focus');
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function decodeName(encoded) {
+    try { return decodeURIComponent(encoded); } catch (error) { return encoded; }
+  }
+
+  // Remember which file arrived last, and scroll it into view on arrival.
+  function trackNewFiles() {
+    const items = Array.from(document.querySelectorAll('#files-list .upload-item[data-encoded-file]'));
+    const names = items.map(function (item) { return item.getAttribute('data-encoded-file'); });
+
+    if (knownFiles === null) {
+      knownFiles = new Set(names);
+      if (names.length) newestFile = names[0];
+      return;
+    }
+
+    const added = names.filter(function (name) { return !knownFiles.has(name); });
+    knownFiles = new Set(names);
+    if (!names.includes(newestFile)) newestFile = names[0] || '';
+
+    if (added.length) {
+      newestFile = added[added.length - 1];
+      const item = items[names.indexOf(newestFile)];
+      if (item && item.scrollIntoView) item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function findPrintButton() {
+    const items = Array.from(document.querySelectorAll('#files-list .upload-item[data-encoded-file]'));
+    const item = items.find(function (el) { return el.getAttribute('data-encoded-file') === newestFile; }) || items[0];
+    return item ? item.querySelector('.file-actions-row button') : null;
+  }
+
+  function setPointerTarget(button) {
+    if (pointerTarget === button) return;
+    if (pointerTarget) pointerTarget.classList.remove('fdp-print-target');
+    pointerTarget = button;
+    if (pointerTarget) pointerTarget.classList.add('fdp-print-target');
+  }
+
+  function positionPointer() {
+    if (!pointerTarget || !pointerTarget.isConnected) {
+      pointer.hidden = true;
+      return;
+    }
+    const rect = pointerTarget.getBoundingClientRect();
+    const visible = rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    pointer.hidden = !visible;
+    if (!visible) return;
+    pointer.style.left = Math.round(rect.left + rect.width / 2) + 'px';
+    pointer.style.top = Math.round(rect.top - 6) + 'px';
+
+    // Keep the speech bubble on screen; the arrow stays above the button.
+    const bubble = pointer.querySelector('.fdp-pointer__bubble');
+    if (!bubble) return;
+    bubble.style.marginLeft = '0px';
+    const box = bubble.getBoundingClientRect();
+    const margin = 12;
+    let shift = 0;
+    if (box.left < margin) shift = margin - box.left;
+    else if (box.right > window.innerWidth - margin) shift = (window.innerWidth - margin) - box.right;
+    // marginLeft shifts a centred flex item by half its value.
+    bubble.style.marginLeft = Math.round(shift * 2) + 'px';
+  }
+
+  function updatePointer(step) {
+    const button = step === 'arrived' ? findPrintButton() : null;
+    setPointerTarget(button);
+
+    if (!button) {
+      pointer.hidden = true;
+      pointerKey = '';
+      return;
+    }
+
+    const key = newestFile + '-' + lang();
+    if (key !== pointerKey) {
+      pointerKey = key;
+      pointer.innerHTML = '<div class="fdp-pointer__bubble">' + t('pointerTitle')
+        + '<small>' + escapeHtml(decodeName(newestFile)) + '</small></div>'
+        + '<svg class="fdp-pointer__arrow" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22 3 11h5V2h8v9h5z"/></svg>';
+    }
+    positionPointer();
+  }
+
+  function render() {
+    trackNewFiles();
+    const step = currentStep();
+    updatePointer(step);
+    const key = step + '-' + lang();
+    if (key === lastRenderKey) return;
+
+    const stepChanged = !lastRenderKey.startsWith(step + '-');
+    lastRenderKey = key;
+
+    const index = steps.indexOf(step);
+    const number = step === 'ended' ? '✓' : String(index + 1);
+    const dots = steps.map(function (_, i) {
+      return '<span class="fdp-guide__dot' + (step === 'ended' || i <= index ? ' fdp-guide__dot--done' : '') + '"></span>';
+    }).join('');
+
+    guide.innerHTML = '<div class="fdp-guide__num">' + number + '</div>'
+      + '<div><p class="fdp-guide__eyebrow">' + t('next') + '</p>'
+      + '<p class="fdp-guide__title">' + t(step + 'Title') + '</p>'
+      + '<p class="fdp-guide__text">' + t(step + 'Text') + '</p>'
+      + '<div class="fdp-guide__dots">' + dots + '</div></div>';
+
+    if (stepChanged) {
+      guide.classList.remove('fdp-guide--pop');
+      void guide.offsetWidth;
+      guide.classList.add('fdp-guide--pop');
+    }
+
+    setFocus(focusTarget(step));
+  }
+
+  function markPrinted() {
+    printed = true;
+    render();
+  }
+
+  // Hook into the print and preview actions of files-page.js.
+  ['startPrintFlow', 'printPreview'].forEach(function (name) {
+    const original = window[name];
+    if (typeof original !== 'function') return;
+    window[name] = function () {
+      markPrinted();
+      return original.apply(this, arguments);
+    };
+  });
+
+  const originalShowPreview = window.showPreview;
+  if (typeof originalShowPreview === 'function') {
+    window.showPreview = function () {
+      const result = originalShowPreview.apply(this, arguments);
+      previewOpened = true;
+      Promise.resolve(result).then(render, render);
+      return result;
+    };
+  }
+
+  ['print-all-files', 'preview-print-btn'].forEach(function (id) {
+    const button = document.getElementById(id);
+    if (button) button.addEventListener('click', markPrinted);
+  });
+
+  const languageToggle = document.getElementById('language-toggle');
+  if (languageToggle) {
+    languageToggle.addEventListener('click', function () { setTimeout(render, 0); });
+  }
+
+  window.addEventListener('fdp-station-status', render);
+  window.addEventListener('scroll', positionPointer, true);
+  window.addEventListener('resize', positionPointer);
+  render();
+  setInterval(render, 500);
+})();
