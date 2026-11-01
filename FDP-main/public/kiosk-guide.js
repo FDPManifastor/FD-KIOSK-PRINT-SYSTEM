@@ -37,13 +37,23 @@
 
   const style = document.createElement('style');
   style.textContent = [
-    'body{padding-bottom:9rem}',
-    '.fdp-guide{position:fixed;left:1.25rem;bottom:1.25rem;z-index:8999;max-width:min(36rem,calc(100vw - 20rem));',
+    // Stappen-popup: verschijnt boven de QR-code bij elke nieuwe stap, 5 s zichtbaar.
+    '.fdp-guide{position:fixed;left:50%;top:1rem;z-index:8999;width:min(26rem,calc(100vw - 2rem));',
     'display:flex;gap:1rem;align-items:center;border-radius:1.25rem;background:#fff;color:#18181b;padding:1rem 1.25rem;',
-    'box-shadow:0 20px 50px rgba(0,0,0,.25);border:2px solid #dc2626;font-family:Manrope,system-ui,sans-serif}',
-    '.fdp-guide[hidden]{display:none}',
-    '.fdp-guide--pop{animation:fdpGuidePop .5s ease-out}',
-    '@keyframes fdpGuidePop{0%{transform:translateY(16px);opacity:0}60%{transform:translateY(-4px);opacity:1}100%{transform:translateY(0)}}',
+    'box-shadow:0 20px 50px rgba(0,0,0,.28);border:2px solid #dc2626;font-family:Manrope,system-ui,sans-serif;',
+    'transform:translate(-50%,-100%) translateY(18px) scale(.92);opacity:0;visibility:hidden;pointer-events:none;',
+    'transition:opacity .35s ease,transform .45s cubic-bezier(.16,1,.3,1),visibility 0s linear .45s}',
+    '.fdp-guide.is-visible{opacity:1;visibility:visible;transform:translate(-50%,-100%);',
+    'transition:opacity .35s ease,transform .45s cubic-bezier(.16,1,.3,1),visibility 0s}',
+    '.fdp-guide.is-below{transform:translate(-50%,0) translateY(-18px) scale(.92)}',
+    '.fdp-guide.is-below.is-visible{transform:translate(-50%,0)}',
+    '.fdp-guide::after{content:"";position:absolute;left:calc(50% + var(--tail-shift,0px));bottom:-11px;width:18px;height:18px;margin-left:-9px;background:#fff;',
+    'border-right:2px solid #dc2626;border-bottom:2px solid #dc2626;transform:rotate(45deg)}',
+    '.fdp-guide.is-below::after{display:none}',
+    '.fdp-guide__timer{position:absolute;left:1rem;right:1rem;bottom:.45rem;height:3px;border-radius:999px;background:#fee2e2;overflow:hidden}',
+    '.fdp-guide__timer span{display:block;height:100%;background:#dc2626;transform-origin:left;}',
+    '.fdp-guide.is-visible .fdp-guide__timer span{animation:fdpGuideCountdown 5s linear forwards}',
+    '@keyframes fdpGuideCountdown{from{transform:scaleX(1)}to{transform:scaleX(0)}}',
     '.fdp-guide__num{flex:none;width:3rem;height:3rem;border-radius:999px;background:#dc2626;color:#fff;display:flex;',
     'align-items:center;justify-content:center;font-size:1.4rem;font-weight:800}',
     '.fdp-guide__eyebrow{margin:0;font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#dc2626}',
@@ -55,7 +65,6 @@
     '.fdp-guide-focus{position:relative;outline:4px solid #f59e0b !important;outline-offset:4px;border-radius:1rem;',
     'animation:fdpGuideFocus 1.4s ease-in-out infinite}',
     '@keyframes fdpGuideFocus{0%,100%{outline-color:#f59e0b}50%{outline-color:rgba(245,158,11,.25)}}',
-    '@media (max-width:900px){.fdp-guide{max-width:calc(100vw - 2.5rem);bottom:8.5rem}}',
     // Pointer: bewegende pijl met tekstballon boven de Print-knop van het bestand.
     '.fdp-pointer{position:fixed;z-index:9001;pointer-events:none;display:flex;flex-direction:column;align-items:center;',
     'transform:translate(-50%,-100%);font-family:Manrope,system-ui,sans-serif}',
@@ -69,7 +78,7 @@
     '@keyframes fdpPointerPop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}',
     '.fdp-print-target{position:relative;box-shadow:0 0 0 0 rgba(22,163,74,.7);animation:fdpPrintRing 1.4s ease-out infinite}',
     '@keyframes fdpPrintRing{0%{box-shadow:0 0 0 0 rgba(22,163,74,.7)}100%{box-shadow:0 0 0 14px rgba(22,163,74,0)}}',
-    '@media (prefers-reduced-motion:reduce){.fdp-pointer__arrow,.fdp-print-target,.fdp-guide-focus{animation:none}}'
+    '@media (prefers-reduced-motion:reduce){.fdp-pointer__arrow,.fdp-print-target,.fdp-guide-focus{animation:none}.fdp-guide{transition:opacity .2s}}'
   ].join('');
   document.head.appendChild(style);
 
@@ -94,6 +103,8 @@
   let newestFile = '';
   let pointerTarget = null;
   let pointerKey = '';
+  let hideTimer = null;
+  const guideVisibleMs = 5000;
 
   function lang() {
     try {
@@ -271,15 +282,51 @@
       + '<div><p class="fdp-guide__eyebrow">' + t('next') + '</p>'
       + '<p class="fdp-guide__title">' + t(step + 'Title') + '</p>'
       + '<p class="fdp-guide__text">' + t(step + 'Text') + '</p>'
-      + '<div class="fdp-guide__dots">' + dots + '</div></div>';
+      + '<div class="fdp-guide__dots">' + dots + '</div></div>'
+      + '<div class="fdp-guide__timer"><span></span></div>';
 
-    if (stepChanged) {
-      guide.classList.remove('fdp-guide--pop');
-      void guide.offsetWidth;
-      guide.classList.add('fdp-guide--pop');
-    }
+    if (stepChanged) showGuide();
+    else positionGuide();
 
     setFocus(focusTarget(step));
+  }
+
+  // Place the popup just above the QR code (or at the top of the screen when
+  // the QR code is scrolled out of view).
+  function positionGuide() {
+    const qr = document.getElementById('qr-image');
+    const rect = qr ? qr.getBoundingClientRect() : null;
+    const room = guide.offsetHeight + 24;
+
+    if (rect && rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight && rect.top > room) {
+      guide.classList.remove('is-below');
+      guide.style.left = Math.round(rect.left + rect.width / 2) + 'px';
+      guide.style.top = Math.round(rect.top - 14) + 'px';
+    } else {
+      guide.classList.add('is-below');
+      guide.style.left = rect && rect.width > 0 ? Math.round(rect.left + rect.width / 2) + 'px' : '50%';
+      guide.style.top = '16px';
+    }
+
+    // Keep it on screen horizontally; the little arrow keeps pointing at the QR code.
+    const half = guide.offsetWidth / 2;
+    const left = parseFloat(guide.style.left);
+    let tailShift = 0;
+    if (Number.isFinite(left)) {
+      const clamped = Math.round(Math.min(Math.max(left, half + 12), window.innerWidth - half - 12));
+      tailShift = Math.max(-(half - 28), Math.min(half - 28, left - clamped));
+      guide.style.left = clamped + 'px';
+    }
+    guide.style.setProperty('--tail-shift', Math.round(tailShift) + 'px');
+  }
+
+  function showGuide() {
+    positionGuide();
+    guide.classList.remove('is-visible');
+    void guide.offsetWidth; // restart the animation and countdown bar
+    guide.classList.add('is-visible');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () { guide.classList.remove('is-visible'); }, guideVisibleMs);
   }
 
   function markPrinted() {
@@ -317,7 +364,13 @@
     languageToggle.addEventListener('click', function () { setTimeout(render, 0); });
   }
 
-  window.addEventListener('fdp-station-status', render);
+  window.addEventListener('fdp-station-status', function (event) {
+    render();
+    // Na activeren: toon de eerste stap opnieuw, die viel weg achter de vergrendeling.
+    if (event.detail && event.detail.status === 'active') showGuide();
+  });
+  window.addEventListener('scroll', function () { if (guide.classList.contains('is-visible')) positionGuide(); }, true);
+  window.addEventListener('resize', positionGuide);
   window.addEventListener('scroll', positionPointer, true);
   window.addEventListener('resize', positionPointer);
   render();
