@@ -7,6 +7,7 @@
   const content = modal ? modal.querySelector('.modal-content') : null;
   const closeButton = modal ? modal.querySelector('.close-btn') : null;
   if (!modal || !content || !window.FDPStationTimer) return;
+  const computerLabel = (window.FDPFilesPageConfig && window.FDPFilesPageConfig.copyLabel) || '';
 
   // De popup zit in een container die 'fixed' posities verschuift; direct onder
   // <body> staat hij altijd midden in beeld en boven de gids en timer.
@@ -15,17 +16,19 @@
   const texts = {
     nl: {
       lockedTitle: 'Deze computer is nog niet geactiveerd',
-      lockedText: 'Vraag een van onze medewerkers om de computer voor je te activeren. Hieronder zie je alvast onze prijzen.',
+      lockedText: 'Vraag een van onze medewerkers om computer {computer} voor je te activeren. Hieronder zie je alvast onze prijzen.',
       endedTitle: 'Je sessie is afgelopen',
-      endedText: 'Betaal bij de balie. Wil je de computer opnieuw gebruiken? Vraag een van onze medewerkers.',
-      due: 'Te betalen'
+      endedText: 'Betaal bij de balie en noem computer {computer}. Wil je de computer opnieuw gebruiken? Vraag een van onze medewerkers.',
+      due: 'Te betalen',
+      computer: 'Computer'
     },
     en: {
       lockedTitle: 'This computer has not been activated yet',
-      lockedText: 'Please ask one of our staff members to activate the computer for you. Our prices are shown below.',
+      lockedText: 'Please ask one of our staff members to activate computer {computer} for you. Our prices are shown below.',
       endedTitle: 'Your session has ended',
-      endedText: 'Please pay at the counter. Want to use the computer again? Ask one of our staff members.',
-      due: 'Amount due'
+      endedText: 'Please pay at the counter and mention computer {computer}. Want to use the computer again? Ask one of our staff members.',
+      due: 'Amount due',
+      computer: 'Computer'
     }
   };
 
@@ -38,14 +41,17 @@
     '.fdp-lock-banner__icon svg{width:1.7rem;height:1.7rem}',
     '.fdp-lock-banner__title{margin:0;font-size:1.35rem;font-weight:800;color:#991b1b;line-height:1.2}',
     '.fdp-lock-banner__text{margin:.3rem 0 0;font-size:1rem;line-height:1.45}',
-    '.fdp-lock-banner__due{margin-left:auto;flex:none;text-align:right}',
+    '.fdp-lock-banner__pc{margin-left:auto;flex:none;text-align:center;background:#dc2626;color:#fff;border-radius:.9rem;padding:.55rem 1rem}',
+    '.fdp-lock-banner__pc small{display:block;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.85}',
+    '.fdp-lock-banner__pc strong{display:block;font-size:1.6rem;font-weight:900;line-height:1.1;white-space:nowrap}',
+    '.fdp-lock-banner__due{flex:none;text-align:right}',
     '.fdp-lock-banner__due small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}',
     '.fdp-lock-banner__due strong{font-size:2rem;font-weight:900;color:#991b1b}',
     '#prijzenModal.fdp-locked .close-btn{display:none}',
     'body.fdp-kiosk-locked .fdp-guide,body.fdp-kiosk-locked .fdp-pointer,body.fdp-kiosk-locked .fdp-station-timer{display:none !important}',
     '#prijzenModal.fdp-locked{cursor:default}',
     '@keyframes fdpLockPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}',
-    '@media (max-width:640px){.fdp-lock-banner{flex-wrap:wrap}.fdp-lock-banner__due{margin-left:0}}'
+    '@media (max-width:640px){.fdp-lock-banner{flex-wrap:wrap}.fdp-lock-banner__pc{margin-left:0}}'
   ].join('');
   document.head.appendChild(style);
 
@@ -75,7 +81,8 @@
     banner.innerHTML = '<div class="fdp-lock-banner__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">'
       + '<rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round"></path></svg></div>'
       + '<div><p class="fdp-lock-banner__title">' + (ended ? t.endedTitle : t.lockedTitle) + '</p>'
-      + '<p class="fdp-lock-banner__text">' + (ended ? t.endedText : t.lockedText) + '</p></div>'
+      + '<p class="fdp-lock-banner__text">' + (ended ? t.endedText : t.lockedText).replace('{computer}', '<strong>' + computerLabel + '</strong>') + '</p></div>'
+      + (computerLabel ? '<div class="fdp-lock-banner__pc"><small>' + t.computer + '</small><strong>' + computerLabel + '</strong></div>' : '')
       + (ended ? '<div class="fdp-lock-banner__due"><small>' + t.due + '</small><strong>' + euro(station.costCents) + '</strong></div>' : '');
   }
 
