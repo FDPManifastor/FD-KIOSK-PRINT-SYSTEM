@@ -8,6 +8,8 @@
   const folderName = config.folderName;
   const uploadPath = config.uploadPath;
   const downloadAllEnabled = config.enableDownloadAll === true;
+  // Minuten computergebruik inbegrepen bij de opstartkosten (prijslijst).
+  const startupMinutes = Number.isFinite(config.startupMinutes) ? config.startupMinutes : 5;
   const productionUploadOrigin = config.productionUploadOrigin || 'https://fd-printing-uploads.onrender.com';
   const copyNumberMatch = folderName.match(/copy(\d+)/i);
   const copyNumber = copyNumberMatch ? copyNumberMatch[1] : '';
@@ -82,7 +84,7 @@
       priceModalTitle: 'Selfservice Printen en Kopieren',
       priceModalSubtitle: 'Duidelijke prijzen voor printen, kopieren en afwerken',
       priceStartupHeader: 'Opstart kosten / Hulp',
-      priceStartupRow1: '<strong>Opstart kosten</strong><br><small>Incl. 5min. computergebruik.</small>',
+      priceStartupRow1: '<strong>Opstart kosten</strong><br><small>Incl. {minutes}min. computergebruik.</small>',
       priceStartupRow2: '<strong>Opstart kosten</strong><br><small>Hulp van personeel</small>',
       priceBwHeader: 'Printen zwart-wit*',
       pricePerPageA4A3: 'Prijs per pagina - A4 en A3',
@@ -177,7 +179,7 @@
       priceModalTitle: 'Self-service Printing and Copying',
       priceModalSubtitle: 'Clear prices for printing, copying, and finishing',
       priceStartupHeader: 'Startup costs / Assistance',
-      priceStartupRow1: '<strong>Startup costs</strong><br><small>Includes 5 minutes of computer use.</small>',
+      priceStartupRow1: '<strong>Startup costs</strong><br><small>Includes {minutes} minutes of computer use.</small>',
       priceStartupRow2: '<strong>Startup costs</strong><br><small>Assistance from staff</small>',
       priceBwHeader: 'Black-and-white printing*',
       pricePerPageA4A3: 'Price per page - A4 and A3',
@@ -400,7 +402,7 @@
     setText('prijzenModalTitle', t('priceModalTitle'));
     setText('prijzen-subtitle', t('priceModalSubtitle'));
     setText('prijzen-startup-header', t('priceStartupHeader'));
-    setHtml('prijzen-startup-row-1', t('priceStartupRow1'));
+    setHtml('prijzen-startup-row-1', fillTemplate(t('priceStartupRow1'), { minutes: startupMinutes }));
     setHtml('prijzen-startup-row-2', t('priceStartupRow2'));
     setHtml('prijzen-bw-header', t('priceBwHeader') + ' <span id="prijzen-bw-sub" class="subheader-text">' + t('pricePerPageA4A3') + '</span>');
     setText('prijzen-bw-col-amount', t('priceAmountCol'));
