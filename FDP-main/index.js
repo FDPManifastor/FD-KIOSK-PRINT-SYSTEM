@@ -542,6 +542,17 @@ function streamZipDownload(res, folder, files) {
   archive.finalize();
 }
 
+// Weigert uploads zolang een station met timer niet is geactiveerd
+// (draait vóór multer, dus er wordt niets opgeslagen).
+function requireActivatedStation(folder) {
+  return (req, res, next) => {
+    if (!timerFolders.includes(folder)) return next();
+    const session = stationSessions.get(folder);
+    if (session && !session.stoppedAt) return next(); // actief of gepauzeerd
+    return res.status(423).json({ error: 'Deze computer is nog niet geactiveerd. Vraag een van onze medewerkers om hem te activeren.' });
+  };
+}
+
 // Upload routes
 app.post('/upload_copy1', createUploadMiddleware('uploads/copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy1'));
 app.post('/upload_copy2', createUploadMiddleware('uploads/copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy2'));
@@ -552,7 +563,7 @@ app.post('/upload_utrecht_copy2', createUploadMiddleware('uploads/utrecht_copy2'
 app.post('/upload_utrecht_copy3', createUploadMiddleware('uploads/utrecht_copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy3'));
 app.post('/upload_hoogvliet_copy1', createUploadMiddleware('uploads/hoogvliet_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy1'));
 app.post('/upload_hoogvliet_copy2', createUploadMiddleware('uploads/hoogvliet_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy2'));
-app.post('/upload_test_copy1', createUploadMiddleware('uploads/test_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('test_copy1'));
+app.post('/upload_test_copy1', requireActivatedStation('test_copy1'), createUploadMiddleware('uploads/test_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('test_copy1'));
 
 // Compatibility route so QR links also work when .html is omitted.
 app.get('/upload_test_copy1', (req, res) => {
@@ -1087,6 +1098,21 @@ function requireBackoffice(req, res) {
   return true;
 }
 
+function clearFolderFiles(folder) {
+  const folderPath = path.resolve(path.join('uploads', folder));
+  try {
+    fs.readdirSync(folderPath).forEach((filename) => {
+      const filePath = path.resolve(path.join(folderPath, filename));
+      if (filePath.startsWith(folderPath + path.sep) && fs.statSync(filePath).isFile()) {
+        fs.unlinkSync(filePath);
+        fileOwners.delete(buildFileKey(folder, filename));
+      }
+    });
+  } catch (error) {
+    console.warn(`Bestanden van ${folder} konden niet gewist worden:`, error.message);
+  }
+}
+
 function requireTimerFolder(req, res) {
   const folder = req.params.folder;
   if (!timerFolders.includes(folder)) {
@@ -1133,6 +1159,8 @@ app.post('/backoffice/api/stations/:folder/start', (req, res) => {
     return res.status(409).json({ error: 'Deze computer is al vrijgegeven.', station: describeStation(folder) });
   }
 
+  // Privacy: begin elke klant met een lege map, zonder bestanden van de vorige klant.
+  clearFolderFiles(folder);
   stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null, pausedAt: null, pausedTotalMs: 0 });
   saveStationSessions();
   console.log(`Station ${folder} vrijgegeven.`);

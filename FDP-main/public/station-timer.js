@@ -31,6 +31,7 @@
   };
 
   let station = { status: 'idle' };
+  let loaded = false; // true after the first answer from the server
   let clockOffset = 0;
 
   function lang() {
@@ -151,7 +152,9 @@
       if (!response.ok) return;
       const data = await response.json();
       clockOffset = data.serverNow - Date.now();
-      const changed = data.status !== station.status || data.startedAt !== station.startedAt;      station = data;
+      const changed = !loaded || data.status !== station.status || data.startedAt !== station.startedAt;
+      station = data;
+      loaded = true;
       render();
       if (changed) {
         window.dispatchEvent(new CustomEvent('fdp-station-status', { detail: { status: data.status } }));
@@ -162,7 +165,8 @@
   }
 
   window.FDPStationTimer = {
-    getStatus: function () { return station.status; }
+    getStatus: function () { return loaded ? station.status : null; },
+    getStation: function () { return loaded ? station : null; }
   };
 
   poll();

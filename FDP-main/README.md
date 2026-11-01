@@ -26,6 +26,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 - The start page (`/`) shows under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged. Stations without the timer show "Timer nog niet ingeschakeld".
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.
 - Sessions are saved in `uploads/.station-sessions.json`, so a running timer survives a restart when `uploads` is on a persistent disk.
+- Lock (test station only, `kiosk-lock.js`): while the station is off or finished, the kiosk shows the price list with "ask a staff member to activate", which cannot be closed, and uploads to that station are refused. Activating removes the lock and clears the previous customer's files.
 - To roll out to another station: add the folder to `STATION_TIMER_FOLDERS` and add `<script src="/station-timer.js"></script>` and `<script src="/kiosk-guide.js"></script>` at the end of its `files_*.html` page.
 
 ## Docker
