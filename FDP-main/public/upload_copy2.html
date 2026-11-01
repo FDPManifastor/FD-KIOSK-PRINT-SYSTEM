@@ -13,6 +13,53 @@
         .success-message { animation: slideIn 0.5s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .file-icon { animation: bounce 2s infinite; }
+        .guide-step { transition: all 0.3s ease; }
+        .guide-step .guide-num { transition: all 0.3s ease; }
+        .guide-step.is-active .guide-num { background: #dc2626; color: #fff; box-shadow: 0 0 0 4px #fecaca; }
+        .guide-step.is-active .guide-label { color: #18181b; font-weight: 700; }
+        .guide-step.is-done .guide-num { background: #16a34a; color: #fff; }
+        /* Popup "ga verder op de computer" - eigen CSS, werkt ook zonder Tailwind */
+        .gc-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+            background: rgba(17, 24, 39, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: gcFade 0.3s ease-out; }
+        .gc-overlay[hidden] { display: none; }
+        .gc-card { width: 100%; max-width: 24rem; background: #fff; border-radius: 1.5rem; overflow: hidden; text-align: center;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35); animation: gcSlide 0.45s ease-out; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+        .gc-head { background: #16a34a; color: #fff; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+            font-weight: 700; font-size: 1.05rem; }
+        .gc-head svg { width: 1.6rem; height: 1.6rem; flex: none; }
+        .gc-body { padding: 1.25rem 1.5rem 1.5rem; }
+        .gc-scene { position: relative; height: 7.5rem; margin: 0 auto 1rem; max-width: 18rem; display: flex; align-items: center; justify-content: space-between; }
+        .gc-phone { width: 2.6rem; height: 4.4rem; border: 3px solid #374151; border-radius: 0.6rem; position: relative; background: #f9fafb; flex: none; }
+        .gc-phone::after { content: ''; position: absolute; left: 50%; bottom: 0.25rem; width: 0.9rem; height: 0.18rem; margin-left: -0.45rem; border-radius: 1rem; background: #9ca3af; }
+        .gc-phone-file { position: absolute; left: 50%; top: 0.55rem; width: 1.2rem; height: 1.5rem; margin-left: -0.6rem; border-radius: 0.2rem; background: #fecaca; border: 2px solid #dc2626; }
+        .gc-track { position: relative; flex: 1; height: 2rem; margin: 0 0.5rem; }
+        .gc-dot { position: absolute; top: 50%; left: 0; width: 0.6rem; height: 0.6rem; margin-top: -0.3rem; border-radius: 50%; background: #dc2626;
+            opacity: 0; animation: gcTravel 1.8s ease-in-out infinite; }
+        .gc-dot:nth-child(2) { animation-delay: 0.3s; }
+        .gc-dot:nth-child(3) { animation-delay: 0.6s; }
+        .gc-chevron { position: absolute; top: 50%; right: -0.25rem; width: 1.6rem; height: 1.6rem; margin-top: -0.8rem; color: #dc2626; animation: gcNudge 0.9s ease-in-out infinite; }
+        .gc-computer { position: relative; flex: none; width: 6.2rem; }
+        .gc-screen { height: 4.3rem; border: 3px solid #374151; border-radius: 0.5rem; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem;
+            animation: gcGlow 1.8s ease-in-out infinite; }
+        .gc-screen-file { width: 4rem; height: 0.55rem; border-radius: 0.2rem; background: #e5e7eb; }
+        .gc-print { padding: 0.15rem 0.55rem; border-radius: 0.35rem; background: #16a34a; color: #fff; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+            animation: gcPress 1.8s ease-in-out infinite; }
+        .gc-stand { width: 1.4rem; height: 0.7rem; margin: 0 auto; background: #374151; }
+        .gc-base { width: 3.2rem; height: 0.25rem; margin: 0 auto; border-radius: 1rem; background: #374151; }
+        .gc-label { position: absolute; top: -0.4rem; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.65rem; font-weight: 800;
+            color: #b91c1c; background: #fee2e2; border-radius: 1rem; padding: 0.1rem 0.5rem; }
+        .gc-title { margin: 0; font-size: 1.5rem; font-weight: 900; color: #111827; line-height: 1.2; }
+        .gc-text { margin: 0.6rem 0 0; color: #4b5563; font-size: 1rem; line-height: 1.5; }
+        .gc-btn { display: block; width: 100%; margin-top: 1.25rem; border: 0; border-radius: 0.9rem; background: #dc2626; color: #fff; font-weight: 700; font-size: 1rem; padding: 0.9rem; cursor: pointer; }
+        .gc-btn:hover { background: #b91c1c; }
+        .gc-link { display: block; width: 100%; margin-top: 0.4rem; border: 0; background: none; color: #4b5563; font-weight: 600; font-size: 0.9rem; padding: 0.5rem; cursor: pointer; }
+        @keyframes gcFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes gcSlide { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
+        @keyframes gcTravel { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { left: calc(100% - 1.6rem); opacity: 0; } }
+        @keyframes gcNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+        @keyframes gcGlow { 0%, 55%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } 75% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0.25); } }
+        @keyframes gcPress { 0%, 60%, 100% { transform: scale(1); } 75% { transform: scale(1.18); } }
+        @media (prefers-reduced-motion: reduce) { .gc-dot, .gc-chevron, .gc-screen, .gc-print { animation: none; } .gc-dot { opacity: 1; } .gc-dot:nth-child(2) { left: 35%; } .gc-dot:nth-child(3) { left: 70%; } }
         @keyframes bounce { 0%,20%,50%,80%,100% { transform: translateY(0);} 40% { transform: translateY(-10px);} 60% { transform: translateY(-5px);} }
     </style>
  </head>
@@ -27,6 +74,20 @@
     <div class="mb-8">
      <h2 id="printer-id" class="text-6xl font-black text-gray-800 text-center tracking-wider">COPY 2</h2>
     </div>
+    <ol id="phone-guide" class="w-full max-w-md grid grid-cols-3 gap-2 mb-6" aria-label="Stappen">
+     <li class="guide-step flex flex-col items-center text-center gap-1.5" data-step="1">
+      <span class="guide-num w-9 h-9 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">1</span>
+      <span id="guide-label-1" class="guide-label text-xs text-gray-500 leading-tight">Kies je bestand</span>
+     </li>
+     <li class="guide-step flex flex-col items-center text-center gap-1.5" data-step="2">
+      <span class="guide-num w-9 h-9 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">2</span>
+      <span id="guide-label-2" class="guide-label text-xs text-gray-500 leading-tight">Uploaden</span>
+     </li>
+     <li class="guide-step flex flex-col items-center text-center gap-1.5" data-step="3">
+      <span class="guide-num w-9 h-9 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">3</span>
+      <span id="guide-label-3" class="guide-label text-xs text-gray-500 leading-tight">Printen op de computer</span>
+     </li>
+    </ol>
     <div class="w-full max-w-md">
      <div id="upload-area" class="upload-area bg-white rounded-2xl p-8 text-center shadow-lg">
       <div class="mb-6">
@@ -60,6 +121,46 @@
    </main>
    <footer class="bg-gray-800 text-white text-center py-4 px-4"><p class="text-sm">© 2024 FD Printing Center - Selfservice Printing</p></footer>
   </div>
+  <div id="go-computer-overlay" class="gc-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="go-computer-title">
+   <div class="gc-card">
+    <div class="gc-head">
+     <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+     <span id="go-computer-uploaded">Je bestand is geüpload!</span>
+    </div>
+    <div class="gc-body">
+     <div class="gc-scene" aria-hidden="true">
+      <div class="gc-phone"><span class="gc-phone-file"></span></div>
+      <div class="gc-track">
+       <span class="gc-dot"></span><span class="gc-dot"></span><span class="gc-dot"></span>
+       <svg class="gc-chevron" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+      </div>
+      <div class="gc-computer">
+       <span id="go-computer-label" class="gc-label">COPY 2</span>
+       <div class="gc-screen"><span class="gc-screen-file"></span><span id="go-computer-print" class="gc-print">PRINT</span></div>
+       <div class="gc-stand"></div><div class="gc-base"></div>
+      </div>
+     </div>
+     <h3 id="go-computer-title" class="gc-title">Ga nu verder op de computer</h3>
+     <p id="go-computer-text" class="gc-text">Je bestand staat klaar op de computer van <strong>COPY 2</strong>. Klik daar bij je bestand op de groene knop <strong>Print</strong>.</p>
+     <button id="go-computer-close" type="button" class="gc-btn">Begrepen</button>
+     <button id="go-computer-more" type="button" class="gc-link">Nog een bestand uploaden</button>
+    </div>
+   </div>
+  </div>
+  <div id="locked-overlay" class="gc-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="locked-title">
+   <div class="gc-card">
+    <div class="gc-head" style="background:#dc2626">
+     <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round"></path></svg>
+     <span id="locked-head">Upload niet gelukt</span>
+    </div>
+    <div class="gc-body">
+     <h3 id="locked-title" class="gc-title">Computer nog niet geactiveerd</h3>
+     <p id="locked-text" class="gc-text">Vraag een van onze medewerkers om computer <strong>COPY 2</strong> te activeren. Probeer het daarna opnieuw.</p>
+     <button id="locked-retry" type="button" class="gc-btn">Opnieuw proberen</button>
+     <button id="locked-close" type="button" class="gc-link">Sluiten</button>
+    </div>
+   </div>
+  </div>
   <script>
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
@@ -89,7 +190,20 @@
                 uploadHelpText: 'Sleep je bestand hierheen of klik om te selecteren',
                 selectFileText: 'Selecteer Bestand',
                 successTitle: 'Bestand succesvol geupload!',
-                successSubtext: 'Je kunt nu je bestand openen en printen vanaf deze computer.',
+                successSubtext: 'Ga verder op de computer van COPY 2. Daar kun je je bestand printen.',
+                guideLabel1: 'Kies je bestand',
+                guideLabel2: 'Uploaden',
+                guideLabel3: 'Printen op de computer',
+                goComputerUploaded: 'Je bestand is geüpload!',
+                goComputerTitle: 'Ga nu verder op de computer',
+                goComputerText: 'Je bestand staat klaar op de computer van <strong>COPY 2</strong>. Klik daar bij je bestand op de groene knop <strong>Print</strong>.',
+                goComputerClose: 'Begrepen',
+                goComputerMore: 'Nog een bestand uploaden',
+                lockedHead: 'Upload niet gelukt',
+                lockedTitle: 'Computer nog niet geactiveerd',
+                lockedText: 'Vraag een van onze medewerkers om computer <strong>COPY 2</strong> te activeren. Probeer het daarna opnieuw.',
+                lockedRetry: 'Opnieuw proberen',
+                lockedClose: 'Sluiten',
                 filesSectionTitle: 'Bestanden in COPY 2',
                 filesSectionSubtext: 'Klik op Download om direct jouw bestand op te halen.',
                 newSessionButton: 'Uploader klaar - start nieuwe sessie',
@@ -119,7 +233,20 @@
                 uploadHelpText: 'Drag your file here or click to select',
                 selectFileText: 'Select File',
                 successTitle: 'File uploaded successfully!',
-                successSubtext: 'You can now open and print your file from this computer.',
+                successSubtext: 'Continue on the COPY 2 computer. You can print your file there.',
+                guideLabel1: 'Choose your file',
+                guideLabel2: 'Upload',
+                guideLabel3: 'Print on the computer',
+                goComputerUploaded: 'Your file has been uploaded!',
+                goComputerTitle: 'Now continue on the computer',
+                goComputerText: 'Your file is ready on the <strong>COPY 2</strong> computer. Click the green <strong>Print</strong> button next to your file there.',
+                goComputerClose: 'Got it',
+                goComputerMore: 'Upload another file',
+                lockedHead: 'Upload failed',
+                lockedTitle: 'Computer not activated yet',
+                lockedText: 'Please ask one of our staff members to activate computer <strong>COPY 2</strong>, then try again.',
+                lockedRetry: 'Try again',
+                lockedClose: 'Close',
                 filesSectionTitle: 'Files in COPY 2',
                 filesSectionSubtext: 'Click Download to open your file directly.',
                 newSessionButton: 'Uploader done - start new session',
@@ -173,7 +300,63 @@
             if (guideStep4) guideStep4.textContent = t('guideStep4');
             const guideStep5 = document.getElementById('guide-step-5');
             if (guideStep5) guideStep5.textContent = t('guideStep5');
+            document.getElementById('guide-label-1').textContent = t('guideLabel1');
+            document.getElementById('guide-label-2').textContent = t('guideLabel2');
+            document.getElementById('guide-label-3').textContent = t('guideLabel3');
+            document.getElementById('go-computer-uploaded').textContent = t('goComputerUploaded');
+            document.getElementById('go-computer-title').textContent = t('goComputerTitle');
+            document.getElementById('go-computer-text').innerHTML = t('goComputerText');
+            document.getElementById('go-computer-close').textContent = t('goComputerClose');
+            document.getElementById('go-computer-more').textContent = t('goComputerMore');
+            document.getElementById('locked-head').textContent = t('lockedHead');
+            document.getElementById('locked-title').textContent = t('lockedTitle');
+            document.getElementById('locked-text').innerHTML = t('lockedText');
+            document.getElementById('locked-retry').textContent = t('lockedRetry');
+            document.getElementById('locked-close').textContent = t('lockedClose');
         }
+
+        // --- Auto-gids op de telefoon ---
+        const goComputerOverlay = document.getElementById('go-computer-overlay');
+
+        function setGuideStep(activeStep) {
+            document.querySelectorAll('#phone-guide .guide-step').forEach((item) => {
+                const step = Number(item.getAttribute('data-step'));
+                item.classList.toggle('is-active', step === activeStep);
+                item.classList.toggle('is-done', step < activeStep);
+                const num = item.querySelector('.guide-num');
+                num.textContent = step < activeStep ? '✓' : String(step);
+            });
+        }
+
+        const lockedOverlay = document.getElementById('locked-overlay');
+        function showLocked() {
+            lockedOverlay.hidden = false;
+            if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+        }
+        document.getElementById('locked-close').addEventListener('click', () => { lockedOverlay.hidden = true; });
+        document.getElementById('locked-retry').addEventListener('click', () => {
+            lockedOverlay.hidden = true;
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        function showGoComputer() {
+            setGuideStep(3);
+            goComputerOverlay.hidden = false;
+            if (navigator.vibrate) navigator.vibrate(120);
+        }
+
+        function hideGoComputer() {
+            goComputerOverlay.hidden = true;
+        }
+
+        document.getElementById('go-computer-close').addEventListener('click', hideGoComputer);
+        document.getElementById('go-computer-more').addEventListener('click', () => {
+            hideGoComputer();
+            setGuideStep(1);
+            fileInput.value = '';
+            fileInput.click();
+        });
 
         function escapeHtml(value) {
             return value
@@ -348,6 +531,7 @@
                 }
 
                 await loadFiles();
+                setGuideStep(1);
                 setSessionStatus(t('newSessionActive'));
             } catch (error) {
                 console.error('Start new session error:', error);
@@ -416,6 +600,7 @@
                 formData.append('mijnBestand', file);
             });
             successMessage.classList.add('hidden');
+            setGuideStep(2);
             setSessionStatus(t('uploadingFile'));
             uploadButton.disabled = true;
             fileInput.disabled = true;
@@ -439,11 +624,19 @@
                     fileInput.value = '';
                     uploadArea.classList.remove('dragover');
                     setSessionStatus(t('uploadSuccessStatus') + ' (' + selectedFiles.length + ')');
+                    showGoComputer();
                     await loadFiles();
+                } else if (res.status === 423) {
+                    // Station staat uit: duidelijke pop-up in plaats van een klein foutregeltje.
+                    setGuideStep(1);
+                    setSessionStatus('');
+                    showLocked();
                 } else {
+                    setGuideStep(1);
                     setSessionStatus(await extractUploadError(res), true);
                 }
             } catch (err) {
+                setGuideStep(1);
                 console.error('Fetch error:', err);
                 if (err && err.name === 'AbortError') {
                     setSessionStatus(t('uploadFetchError') + ': timeout, probeer minder of kleinere bestanden.', true);
@@ -465,6 +658,7 @@
         });
 
         applyLanguage();
+        setGuideStep(1);
         newSessionButton.addEventListener('click', startNewSession);
         loadFiles();
   </script>

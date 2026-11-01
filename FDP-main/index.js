@@ -554,15 +554,15 @@ function requireActivatedStation(folder) {
 }
 
 // Upload routes
-app.post('/upload_copy1', createUploadMiddleware('uploads/copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy1'));
-app.post('/upload_copy2', createUploadMiddleware('uploads/copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy2'));
-app.post('/upload_copy3', createUploadMiddleware('uploads/copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy3'));
-app.post('/upload_copy4', createUploadMiddleware('uploads/copy4').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy4'));
-app.post('/upload_utrecht_copy1', createUploadMiddleware('uploads/utrecht_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy1'));
-app.post('/upload_utrecht_copy2', createUploadMiddleware('uploads/utrecht_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy2'));
-app.post('/upload_utrecht_copy3', createUploadMiddleware('uploads/utrecht_copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy3'));
-app.post('/upload_hoogvliet_copy1', createUploadMiddleware('uploads/hoogvliet_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy1'));
-app.post('/upload_hoogvliet_copy2', createUploadMiddleware('uploads/hoogvliet_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy2'));
+app.post('/upload_copy1', requireActivatedStation('copy1'), createUploadMiddleware('uploads/copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy1'));
+app.post('/upload_copy2', requireActivatedStation('copy2'), createUploadMiddleware('uploads/copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy2'));
+app.post('/upload_copy3', requireActivatedStation('copy3'), createUploadMiddleware('uploads/copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy3'));
+app.post('/upload_copy4', requireActivatedStation('copy4'), createUploadMiddleware('uploads/copy4').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy4'));
+app.post('/upload_utrecht_copy1', requireActivatedStation('utrecht_copy1'), createUploadMiddleware('uploads/utrecht_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy1'));
+app.post('/upload_utrecht_copy2', requireActivatedStation('utrecht_copy2'), createUploadMiddleware('uploads/utrecht_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy2'));
+app.post('/upload_utrecht_copy3', requireActivatedStation('utrecht_copy3'), createUploadMiddleware('uploads/utrecht_copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy3'));
+app.post('/upload_hoogvliet_copy1', requireActivatedStation('hoogvliet_copy1'), createUploadMiddleware('uploads/hoogvliet_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy1'));
+app.post('/upload_hoogvliet_copy2', requireActivatedStation('hoogvliet_copy2'), createUploadMiddleware('uploads/hoogvliet_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy2'));
 app.post('/upload_test_copy1', requireActivatedStation('test_copy1'), createUploadMiddleware('uploads/test_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('test_copy1'));
 
 // Compatibility route so QR links also work when .html is omitted.
@@ -1022,7 +1022,7 @@ app.delete('/delete-all/:folder', (req, res) => {
 // verstreken tijd en de kosten rechtsonder. Tarief: EUR 0,95 voor de eerste
 // 10 minuten, daarna EUR 0,95 per begonnen 5 minuten.
 // Welke stations meedoen staat in STATION_TIMER_FOLDERS (komma-gescheiden),
-// standaard alleen de teststation.
+// standaard alle stations.
 // ---------------------------------------------------------------------------
 const stationPricing = {
   baseCents: 95,
@@ -1030,7 +1030,7 @@ const stationPricing = {
   stepCents: 95,
   stepMinutes: 5
 };
-const timerFolders = (process.env.STATION_TIMER_FOLDERS || 'test_copy1')
+const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','))
   .split(',')
   .map((folder) => folder.trim())
   .filter((folder) => isValidFolder(folder));

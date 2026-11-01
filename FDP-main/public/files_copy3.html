@@ -2,8 +2,8 @@
 <html lang="nl" class="h-full">
  <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FD Printing Center - Bestanden TEST COPY 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FD Printing Center - Bestanden COPY 3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -469,7 +469,6 @@
   </style>
  </head>
  <body class="h-full text-zinc-900">
-  <div class="fixed top-3 right-3 z-50 rounded-full border border-zinc-800/20 bg-zinc-900/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-white shadow-lg">TEST MODE</div>
   <div class="min-h-full relative overflow-x-hidden">
    <div class="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-red-300/30 blur-3xl"></div>
    <div class="pointer-events-none absolute top-32 -right-20 h-96 w-96 rounded-full bg-white/70 blur-3xl"></div>
@@ -486,7 +485,7 @@
        </div>
        <div class="text-center px-2">
         <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-[0.08em] leading-none text-white">SELF SERVICE</h1>
-        <p id="copy-hero-label" class="mt-2 text-sm sm:text-base md:text-lg font-semibold uppercase tracking-[0.2em] text-white/90">TEST COPY 1</p>
+        <p id="copy-hero-label" class="mt-2 text-sm sm:text-base md:text-lg font-semibold uppercase tracking-[0.2em] text-white/90">COPY 3</p>
           <div id="fallback-container" class="mt-2"></div>
        </div>
        <div class="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
@@ -519,7 +518,7 @@
            <p id="scan-upload-text" class="text-2xl md:text-3xl font-bold mt-2">Scan and upload file</p>
           </div>
           <div class="rounded-3xl bg-white p-4 md:p-6 shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
-           <img id="qr-image" alt="QR code to TEST COPY 1 upload page" class="w-full max-w-[470px] mx-auto rounded-2xl border border-zinc-200 p-2 bg-white">
+           <img id="qr-image" alt="QR code to COPY 3 upload page" class="w-full max-w-[470px] mx-auto rounded-2xl border border-zinc-200 p-2 bg-white">
           </div>
           <div class="grid grid-cols-1 gap-3 mt-5">
            <button id="new-session-btn" class="soft-btn bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-3 border border-zinc-900/70">Nieuwe sessie</button>
@@ -534,7 +533,7 @@
              <span class="inline-flex items-center gap-1.5 rounded-full bg-green-600 text-white text-xs font-bold px-2.5 py-1 uppercase tracking-wide"><span class="live-dot inline-block w-2 h-2 rounded-full bg-white"></span><span id="live-badge-text">Live</span></span>
             </div>
             <h2 id="uploads-title" class="text-lg md:text-xl font-extrabold text-zinc-900">Uploads</h2>
-            <p id="uploads-subtitle" class="text-xs text-zinc-500 mt-0.5">TEST COPY 1</p>
+            <p id="uploads-subtitle" class="text-xs text-zinc-500 mt-0.5">COPY 3</p>
            </div>
            <button id="refresh-files" class="soft-btn px-3 py-1.5 text-xs text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-500 shadow-[0_8px_16px_rgba(220,38,38,0.25)]"></button>
           </div>
@@ -581,7 +580,7 @@
       <table class="flyer-table">
        <tbody>
         <tr>
-           <td id="prijzen-startup-row-1"><strong>Opstart kosten</strong><br><small>Incl. 5min. computergebruik.</small></td>
+           <td id="prijzen-startup-row-1"><strong>Opstart kosten</strong><br><small>Incl. 10min. computergebruik.</small></td>
          <td class="prijs">€ 0,95</td>
         </tr>
         <tr>
@@ -808,7 +807,8 @@
    window.FDPFilesPageConfig = {
     folderName: 'copy3',
     uploadPath: '/upload_copy3.html',
-    copyLabel: 'COPY 3'
+    copyLabel: 'COPY 3',
+    startupMinutes: 10
    };
   </script>
   <script src="/files-page.js"></script>
@@ -1320,5 +1320,12 @@
     });
    })();
   </script>
+  <script src="/station-timer.js"></script>
+  <script src="/kiosk-guide.js"></script>
+  <script src="/kiosk-lock.js"></script>
+  <script src="/kiosk-touch.js"></script>
+  <script src="/kiosk-album.js"></script>
+  <script src="/kiosk-language.js"></script>
+  <script src="/kiosk-icons.js"></script>
  </body>
 </html>
