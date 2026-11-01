@@ -27,6 +27,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.
 - Sessions are saved in `uploads/.station-sessions.json`, so a running timer survives a restart when `uploads` is on a persistent disk.
 - Lock (test station only, `kiosk-lock.js`): while the station is off or finished, the kiosk shows the price list with "ask a staff member to activate", which cannot be closed, and uploads to that station are refused. Activating removes the lock and clears the previous customer's files.
+- Touchscreen mode (test station only, `kiosk-touch.js`): tap a file to preview it, large buttons (Print as main button, Delete separate), large confirm dialogs instead of browser pop-ups, no zoom/text selection/long-press menu, tap feedback and smooth animations.
 - To roll out to another station: add the folder to `STATION_TIMER_FOLDERS` and add `<script src="/station-timer.js"></script>` and `<script src="/kiosk-guide.js"></script>` at the end of its `files_*.html` page.
 
 ## Docker
