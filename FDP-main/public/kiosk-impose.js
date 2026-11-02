@@ -45,7 +45,21 @@
     '.fdp-scale__hint{margin:.6rem 0 0;font-size:.8rem;color:#64748b}',
     // vloeiende overgang van de afbeelding in het voorbeeld
     '#edit-layout-grid img,#preview-content img{transition:width .3s ' + ease + ',height .3s ' + ease + '}',
-    'label:has(> #edit-layout-fit-frame){display:none !important}'
+    'label:has(> #edit-layout-fit-frame){display:none !important}',
+    // Selectiekader met grepen voor Vrij formaat
+    '.fdp-free-img{cursor:pointer}',
+    '.fdp-select{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;outline:2px dashed #2563eb;outline-offset:-1px;',
+    'touch-action:none;pointer-events:none;animation:fdpSelectIn .25s ' + ease + '}',
+    '@keyframes fdpSelectIn{from{opacity:0;transform:translate(-50%,-50%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%)}}',
+    '.fdp-handle{position:absolute;width:44px;height:44px;pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center}',
+    '.fdp-handle::after{content:"";width:22px;height:22px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.35);',
+    'transition:transform .2s ' + ease + '}',
+    '.fdp-handle:active::after,.fdp-handle.is-dragging::after{transform:scale(1.35)}',
+    '.fdp-handle[data-h="nw"],.fdp-handle[data-h="se"]{cursor:nwse-resize}.fdp-handle[data-h="ne"],.fdp-handle[data-h="sw"]{cursor:nesw-resize}',
+    '.fdp-handle[data-h="n"],.fdp-handle[data-h="s"]{cursor:ns-resize}.fdp-handle[data-h="e"],.fdp-handle[data-h="w"]{cursor:ew-resize}',
+    '.fdp-dragging #edit-layout-grid img,.fdp-dragging .fdp-select{transition:none !important;animation:none}',
+    '.fdp-size-badge{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;background:rgba(15,23,42,.85);color:#fff;',
+    'font:800 .8rem Manrope,system-ui,sans-serif;padding:.25rem .6rem;border-radius:999px;pointer-events:none;white-space:nowrap}'
   ].join('');
   document.head.appendChild(style);
 
@@ -75,14 +89,16 @@
       + '</div>';
   }
 
-  const footer = copiesInput.closest('.mt-4');
-  if (footer && footer.parentNode) footer.parentNode.insertBefore(panel, footer);
+  // Boven het voorbeeldvel plaatsen (zodat de keuze direct boven het kader staat).
+  const sheetEl = document.getElementById('edit-layout-sheet');
+  const sheetArea = sheetEl ? sheetEl.closest('.mt-4') : null;
+  if (sheetArea && sheetArea.parentNode) sheetArea.parentNode.insertBefore(panel, sheetArea);
   else modal.querySelector('.modal-content').appendChild(panel);
 
   const hints = {
     fit: 'De hele afbeelding blijft in verhouding zichtbaar. Maak hem kleiner met de schuif of −.',
     fill: 'De afbeelding vult het hele kader; wat buiten het kader valt wordt bijgesneden.',
-    free: 'Breedte en hoogte los instellen. Let op: de afbeelding kan hierdoor uitgerekt worden.'
+    free: 'Tik op de afbeelding in het kader en sleep aan de blauwe bolletjes, of gebruik de schuiven. Let op: de afbeelding kan hierdoor uitgerekt worden.'
   };
 
   // ---------------------------------------------------- afbeelding stylen
@@ -144,6 +160,7 @@
   }
 
   function changed() {
+    if (state.mode !== 'free') selectedIndex = -1;
     // Het oude vinkje bijhouden zodat het bestaande voorbeeld klopt.
     const wantFill = state.mode === 'fill';
     if (fitCheckbox.checked !== wantFill) {
@@ -153,6 +170,7 @@
     withScale(settings);
     render();
     applyEverywhere();
+    if (typeof drawSelection === 'function') drawSelection();
   }
 
   function setValue(key, value) {
@@ -179,9 +197,131 @@
     if (range) setValue(range.getAttribute('data-key'), Number(range.value));
   });
 
+  // ------------------------------------------- handmatig formaat (Vrij formaat)
+  // Tik op een afbeelding in het kader: er verschijnt een kader met grepen.
+  // Slepen aan een hoek verandert breedte en hoogte, aan een zijkant één van beide.
+  // De afbeelding blijft gecentreerd, net als in de print.
+  let selectedIndex = -1;
+  const handleDirs = { nw: [-1, -1], n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0] };
+  const handlePos = { nw: [0, 0], n: [50, 0], ne: [100, 0], e: [100, 50], se: [100, 100], s: [50, 100], sw: [0, 100], w: [0, 50] };
+
+  function gridImages() { return Array.from(grid.querySelectorAll('img')); }
+
+  function removeSelection() {
+    grid.querySelectorAll('.fdp-select, .fdp-size-badge').forEach(function (el) { el.remove(); });
+  }
+
+  function drawSelection() {
+    removeSelection();
+    const imgs = gridImages();
+    imgs.forEach(function (img) { img.classList.toggle('fdp-free-img', state.mode === 'free'); });
+    if (state.mode !== 'free' || selectedIndex < 0 || !imgs[selectedIndex]) return;
+    const img = imgs[selectedIndex];
+    const cell = img.parentElement;
+    const box = document.createElement('div');
+    box.className = 'fdp-select';
+    box.style.width = state.width + '%';
+    box.style.height = state.height + '%';
+    Object.keys(handlePos).forEach(function (key) {
+      const h = document.createElement('div');
+      h.className = 'fdp-handle';
+      h.setAttribute('data-h', key);
+      // Grepen altijd binnen de afbeelding houden, zodat ze aan de rand van het vel
+      // niet worden afgeknipt en altijd aan te tikken zijn.
+      h.style.left = 'calc(' + handlePos[key][0] + '% - ' + (handlePos[key][0] / 100 * 44) + 'px)';
+      h.style.top = 'calc(' + handlePos[key][1] + '% - ' + (handlePos[key][1] / 100 * 44) + 'px)';
+      box.appendChild(h);
+    });
+    const badge = document.createElement('div');
+    badge.className = 'fdp-size-badge';
+    badge.textContent = state.width + '% × ' + state.height + '%';
+    cell.appendChild(box);
+    cell.appendChild(badge);
+  }
+
+  function updateSelectionBox() {
+    const box = grid.querySelector('.fdp-select');
+    const badge = grid.querySelector('.fdp-size-badge');
+    if (box) { box.style.width = state.width + '%'; box.style.height = state.height + '%'; }
+    if (badge) badge.textContent = state.width + '% × ' + state.height + '%';
+  }
+
+  // Tik op een afbeelding selecteert hem (alleen in Vrij formaat); tik ernaast deselecteert.
+  grid.addEventListener('pointerdown', function (event) {
+    if (event.target.closest('.fdp-handle')) return;
+    const imgs = gridImages();
+    const index = imgs.indexOf(event.target.closest('img'));
+    if (index < 0) { selectedIndex = -1; removeSelection(); return; }
+    if (state.mode !== 'free') {
+      panel.querySelector('.fdp-scale__hint').textContent = 'Kies "Vrij formaat" om de afbeelding met je vinger op maat te maken.';
+      return;
+    }
+    selectedIndex = index;
+    drawSelection();
+  });
+
+  let drag = null;
+  grid.addEventListener('pointerdown', function (event) {
+    const handle = event.target.closest('.fdp-handle');
+    if (!handle) return;
+    event.preventDefault();
+    const cell = handle.closest('.fdp-select').parentElement.getBoundingClientRect();
+    drag = {
+      handle: handle, dir: handleDirs[handle.getAttribute('data-h')],
+      startX: event.clientX, startY: event.clientY,
+      startW: state.width, startH: state.height, cellW: cell.width, cellH: cell.height
+    };
+    handle.classList.add('is-dragging');
+    modal.classList.add('fdp-dragging');
+    try { handle.setPointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+  });
+
+  grid.addEventListener('pointermove', function (event) {
+    if (!drag) return;
+    // Gecentreerd: een greep 10 px naar buiten maakt het beeld aan beide kanten 10 px groter.
+    const dx = (event.clientX - drag.startX) * drag.dir[0];
+    const dy = (event.clientY - drag.startY) * drag.dir[1];
+    if (drag.dir[0]) state.width = clampPct(drag.startW + (2 * dx / drag.cellW) * 100);
+    if (drag.dir[1]) state.height = clampPct(drag.startH + (2 * dy / drag.cellH) * 100);
+    applyToImages(grid);
+    updateSelectionBox();
+    render();
+    withScale(settings); // print-instelling direct bijwerken, ook als loslaten gemist wordt
+  });
+
+  function endDrag() {
+    if (!drag) return;
+    drag.handle.classList.remove('is-dragging');
+    modal.classList.remove('fdp-dragging');
+    drag = null;
+    changed();
+  }
+  grid.addEventListener('pointerup', endDrag);
+  grid.addEventListener('pointercancel', endDrag);
+  grid.addEventListener('lostpointercapture', endDrag);
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('blur', endDrag);
+
+  function clampPct(value) { return Math.max(5, Math.min(100, Math.round(value))); }
+
   // Het bestaande script tekent het voorbeeld steeds opnieuw; daarna onze stijl toepassen.
   [grid, mainPreview].forEach(function (container) {
-    if (container) new MutationObserver(function () { applyToImages(container); }).observe(container, { childList: true, subtree: true });
+    if (!container) return;
+    new MutationObserver(function (mutations) {
+      // Eigen selectie-elementen negeren, anders blijft dit zichzelf aanroepen.
+      if (drag) return; // tijdens het slepen nooit opnieuw tekenen
+      const own = function (n) {
+        if (!n || n.nodeType !== 1) return true; // tekst-wijzigingen (bijv. het maatlabel) negeren
+        return n.classList.contains('fdp-select') || n.classList.contains('fdp-size-badge') || !!n.closest('.fdp-select, .fdp-size-badge');
+      };
+      const external = mutations.some(function (m) {
+        if (m.target.nodeType === 1 && m.target.closest('.fdp-select, .fdp-size-badge')) return false;
+        return Array.from(m.addedNodes).concat(Array.from(m.removedNodes)).some(function (n) { return !own(n); });
+      });
+      if (!external) return;
+      applyToImages(container);
+      if (container === grid) drawSelection();
+    }).observe(container, { childList: true, subtree: true });
   });
 
   // Start in dezelfde stand als het oude vinkje (standaard aan = Vullen), zodat de
