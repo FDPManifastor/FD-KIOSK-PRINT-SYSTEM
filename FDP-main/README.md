@@ -16,21 +16,23 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 - `PORT`: HTTP port. Defaults to `3000`.
 - `HOST`: Bind address. Defaults to `0.0.0.0`.
 - `UPLOADS_ROOT`: Base directory for uploaded files. Defaults to `./uploads`.
-- `BACKOFFICE_PASSWORD`: Password for the backoffice at `/backoffice`. Without it the backoffice is open to anyone with the link (temporary, for testing) and shows a warning. Set it before enabling the timer on real stations.
+- `BACKOFFICE_PASSWORD`: Optional extra password with owner access (for `/backoffice`). Without it, the owner and location keys are used.
 - `STATION_TIMER_FOLDERS`: Comma-separated stations that use the time/cost timer. Defaults to all stations.
+- `OWNER_ACCESS_KEY`, `ACCESS_KEY_AMSTERDAM`, `ACCESS_KEY_UTRECHT`, `ACCESS_KEY_HOOGVLIET`: secret keys for the owner overview (`/beheer/<key>`) and the location pages (`/locatie/<key>`). If a key is missing it is generated once and stored in `uploads/.access-keys.json`; the links are printed in the server log at start-up. Set them in the host's environment so the links survive redeploys.
 
 ## Station timer and auto-guide
 
 - Staff open `/backoffice`, log in and click **Computer vrijgeven** for a station. The kiosk screen of that station then shows the time used and the cost in the bottom-right corner.
 - Rate: EUR 0.95 for the first 10 minutes, then EUR 0.95 per started 5 minutes.
-- The start page (`/`) shows under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged. Stations without the timer show "Timer nog niet ingeschakeld".
+- Access per location: `/` is a neutral page without stations. Each location has its own secret link `/locatie/<key>` showing only its own stations; the owner link `/beheer/<key>` shows all stations (the former start page) plus the location links to share. The timer API checks the key on every request: a location key can only see and control its own stations (`x-access-key` header). `BACKOFFICE_PASSWORD`, if set, also gives owner access.
+- The overview pages show under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged.
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.
 - Sessions are saved in `uploads/.station-sessions.json`, so a running timer survives a restart when `uploads` is on a persistent disk.
 - Lock (all stations, `kiosk-lock.js`): while the station is off or finished, the kiosk shows the price list with "ask a staff member to activate", which cannot be closed, and uploads to that station are refused. Activating removes the lock and clears the previous customer's files.
 - Touchscreen mode (all stations, `kiosk-touch.js`): tap a file to preview it, large buttons (Print as main button, Delete separate), large confirm dialogs instead of browser pop-ups, no zoom/text selection/long-press menu, tap feedback and smooth animations.
 - Album layout (all stations, `kiosk-album.js`): the instructions column moves into a pop-up opened by a ringing, glowing button; the uploads column is twice as wide and shows files as a thumbnail grid (`/thumb/:folder/:file`, 320 px via sharp, falls back to the original image).
 - Language choice (all stations, `kiosk-language.js`): when the computer is activated and the price list disappears, a Dutch/English pop-up appears; the step pop-up follows after the choice. On the phone, an upload to an inactive computer shows a clear "not activated" pop-up.
-- Impose image size (test station only, `kiosk-impose.js`): Passend (whole image in proportion, 5-100%), Vullen (fill and crop) or Vrij formaat (width and height separately, may stretch), plus a "Passend maken" reset. The print layout in `files-page.js` uses these settings when present.
+- Impose (all stations, `kiosk-impose.js`): Passend (in proportion, 5-100%, corner handles, pinch), Vullen (fill; drag to choose the visible part) or Vrij formaat (8 handles; stretch or crop), move by dragging with snap-to-centre, rotate 90°, centre, undo, photo sizes 9x13-20x30 cm (auto-rotate when needed), size on paper in cm, and a 5 mm safe-margin guide. Preview and print share one calculation (`window.FDPImposeStyle`).
 - New features are built on the test pages (`files_test_copy1.html`, `upload_test_copy1.html`) first. The station pages are copies of those with only the station name and folder replaced (and without the TEST MODE label), so a change is rolled out by regenerating them from the test pages. Run `python3 tools/rollout_stations.py public` from `FDP-main`.
 
 ## Docker

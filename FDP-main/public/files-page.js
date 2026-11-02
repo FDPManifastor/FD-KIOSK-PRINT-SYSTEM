@@ -1077,6 +1077,7 @@
         scalePct,
         freeWidthPct,
         freeHeightPct,
+        impose: settings.impose && typeof settings.impose === 'object' ? settings.impose : null,
         label: settings.presetLabel || settings.presetId || 'Layout'
       };
     }
@@ -1085,13 +1086,31 @@
       const totalSlots = layout.preset.cols * layout.preset.rows;
       let cells = '';
 
+      // Verhouding van één vak op papier (6 mm rand, 2,5 mm tussenruimte), voor de Impose-berekening.
+      const a3 = layout.paperSize === 'A3';
+      const shortMm = a3 ? 297 : 210;
+      const longMm = a3 ? 420 : 297;
+      const sheetW = layout.orientation === 'landscape' ? longMm : shortMm;
+      const sheetH = layout.orientation === 'landscape' ? shortMm : longMm;
+      const cellW = ((sheetW - 12) - 2.5 * (layout.preset.cols - 1)) / layout.preset.cols;
+      const cellH = ((sheetH - 12) - 2.5 * (layout.preset.rows - 1)) / layout.preset.rows;
+      let imposeCss = '';
+      if (layout.impose && typeof window.FDPImposeStyle === 'function') {
+        const css = window.FDPImposeStyle(layout.impose, cellW / cellH);
+        imposeCss = Object.keys(css).map(function (key) {
+          return key.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + css[key];
+        }).join(';') + ';';
+      }
+
       for (let index = 0; index < totalSlots; index += 1) {
         const tileStyle = layout.preset.centered
           ? 'width:' + Math.round(layout.preset.tileScale * 100) + '%;height:' + Math.round(layout.preset.tileScale * 100) + '%;'
           : 'width:100%;height:100%;';
 
         let imageStyle = 'object-fit:' + (layout.fitToFrame ? 'cover' : 'contain') + ';';
-        if (layout.scaleMode === 'fit') {
+        if (imposeCss) {
+          imageStyle = imposeCss;
+        } else if (layout.scaleMode === 'fit') {
           imageStyle = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);object-fit:contain;'
             + 'width:' + layout.scalePct + '%;height:' + layout.scalePct + '%;';
         } else if (layout.scaleMode === 'free') {

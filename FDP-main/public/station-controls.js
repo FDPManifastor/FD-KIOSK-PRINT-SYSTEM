@@ -176,16 +176,14 @@
     if (costEl) costEl.textContent = euro(station.status === 'stopped' ? station.costCents : costCents(elapsed, station.pricing));
   }
 
-  async function api(path, method, retried) {
-    const response = await fetch(path, { method: method || 'GET', cache: 'no-store', headers: { 'x-backoffice-key': getKey() } });
-    const data = await response.json().catch(function () { return {}; });
+  // De sleutel komt uit de link van de locatie of de beheerlink (window.FDPAccess).
+  function accessKey() {
+    return (window.FDPAccess && window.FDPAccess.key) || getKey();
+  }
 
-    if (response.status === 401 && !retried) {
-      const password = window.prompt('Backoffice-wachtwoord:');
-      if (!password) throw new Error('Inloggen nodig om de timers te bedienen.');
-      setKey(password);
-      return api(path, method, true);
-    }
+  async function api(path, method) {
+    const response = await fetch(path, { method: method || 'GET', cache: 'no-store', headers: { 'x-access-key': accessKey() } });
+    const data = await response.json().catch(function () { return {}; });
     if (!response.ok) throw new Error(data.error || ('Status ' + response.status));
     return data;
   }

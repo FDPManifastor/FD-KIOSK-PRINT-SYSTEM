@@ -1104,24 +1104,109 @@ function sessionElapsedMs(session, now) {
   return Math.max(0, endedAt - session.startedAt - pausedTotal - runningPause);
 }
 
-// Zolang BACKOFFICE_PASSWORD niet is ingesteld, is de backoffice open
-// (tijdelijk, voor het testen). Zet het wachtwoord voordat de timer op de
-// echte stations aan gaat.
-function backofficePasswordRequired() {
-  return Boolean(process.env.BACKOFFICE_PASSWORD);
+// ---------------------------------------------------------------------------
+// Toegang per locatie
+//
+// Elke locatie heeft een eigen geheime link (/locatie/<sleutel>) waarop alleen de
+// eigen stations staan. De eigenaar heeft een beheerlink (/beheer/<sleutel>) met
+// het overzicht van alle stations en de links van de locaties.
+// Sleutels komen uit de omgeving (OWNER_ACCESS_KEY, ACCESS_KEY_AMSTERDAM,
+// ACCESS_KEY_UTRECHT, ACCESS_KEY_HOOGVLIET). Ontbreekt er een, dan wordt die
+// eenmalig gemaakt en bewaard in uploads/.access-keys.json.
+// BACKOFFICE_PASSWORD (als die is ingesteld) geeft ook volledige toegang.
+// ---------------------------------------------------------------------------
+const stationLocations = {
+  amsterdam: { label: 'Amsterdam', folders: copyFolders },
+  utrecht: { label: 'Utrecht', folders: utrechtFolders },
+  hoogvliet: { label: 'Hoogvliet', folders: hoogvlietFolders }
+};
+const accessKeyEnvNames = {
+  owner: 'OWNER_ACCESS_KEY',
+  amsterdam: 'ACCESS_KEY_AMSTERDAM',
+  utrecht: 'ACCESS_KEY_UTRECHT',
+  hoogvliet: 'ACCESS_KEY_HOOGVLIET'
+};
+const accessKeyFile = path.join('uploads', '.access-keys.json');
+const accessKeys = loadAccessKeys();
+
+function loadAccessKeys() {
+  let saved = {};
+  try {
+    if (fs.existsSync(accessKeyFile)) saved = JSON.parse(fs.readFileSync(accessKeyFile, 'utf8')) || {};
+  } catch (error) {
+    console.warn('Toegangssleutels konden niet gelezen worden:', error.message);
+  }
+
+  const keys = {};
+  let changedFile = false;
+  Object.keys(accessKeyEnvNames).forEach((role) => {
+    const fromEnv = (process.env[accessKeyEnvNames[role]] || '').trim();
+    if (fromEnv) {
+      keys[role] = fromEnv;
+    } else if (typeof saved[role] === 'string' && saved[role].length >= 16) {
+      keys[role] = saved[role];
+    } else {
+      keys[role] = crypto.randomBytes(18).toString('base64url');
+      saved[role] = keys[role];
+      changedFile = true;
+    }
+  });
+
+  if (changedFile) {
+    try {
+      fs.mkdirSync(path.dirname(accessKeyFile), { recursive: true });
+      fs.writeFileSync(accessKeyFile, JSON.stringify(saved, null, 2), { mode: 0o600 });
+    } catch (error) {
+      console.warn('Toegangssleutels konden niet opgeslagen worden:', error.message);
+    }
+  }
+
+  console.log('Beheerlink:  /beheer/' + keys.owner);
+  Object.keys(stationLocations).forEach((loc) => {
+    console.log('Locatielink ' + stationLocations[loc].label + ': /locatie/' + keys[loc]);
+  });
+  return keys;
 }
 
-function requireBackoffice(req, res) {
-  const expected = process.env.BACKOFFICE_PASSWORD || '';
-  if (!expected) return true;
+function sameSecret(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
 
-  const given = String(req.get('x-backoffice-key') || '');
-  const expectedHash = crypto.createHash('sha256').update(expected).digest();
-  const givenHash = crypto.createHash('sha256').update(given).digest();
-  if (!crypto.timingSafeEqual(expectedHash, givenHash)) {
-    res.status(401).json({ error: 'Onjuist backoffice-wachtwoord.' });
+// Sleutel -> { role: 'owner' } of { role: 'location', location: 'amsterdam' } of null.
+function accessForKey(key) {
+  if (!key) return null;
+  const password = process.env.BACKOFFICE_PASSWORD || '';
+  if (password && sameSecret(key, password)) return { role: 'owner' };
+  if (sameSecret(key, accessKeys.owner)) return { role: 'owner' };
+  for (const loc of Object.keys(stationLocations)) {
+    if (sameSecret(key, accessKeys[loc])) return { role: 'location', location: loc };
+  }
+  return null;
+}
+
+function foldersFor(access) {
+  if (!access) return [];
+  if (access.role === 'owner') return timerFolders;
+  const loc = stationLocations[access.location];
+  return loc ? timerFolders.filter((folder) => loc.folders.includes(folder)) : [];
+}
+
+// Controleert de sleutel; bij een station in de URL ook of dat bij de locatie hoort.
+function requireBackoffice(req, res) {
+  const key = String(req.get('x-access-key') || req.get('x-backoffice-key') || '');
+  const access = accessForKey(key);
+  if (!access) {
+    res.status(401).json({ error: 'Geen toegang. Gebruik de link van je locatie.' });
     return false;
   }
+  const folder = req.params && req.params.folder;
+  if (folder && access.role !== 'owner' && !foldersFor(access).includes(folder)) {
+    res.status(403).json({ error: 'Dit station hoort niet bij jouw locatie.' });
+    return false;
+  }
+  req.fdpAccess = access;
   return true;
 }
 
@@ -1167,13 +1252,72 @@ app.get('/backoffice', (req, res) => {
 
 app.get('/backoffice/api/config', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ passwordRequired: backofficePasswordRequired() });
+  res.json({ passwordRequired: true });
 });
 
 app.get('/backoffice/api/stations', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!requireBackoffice(req, res)) return;
-  return res.json({ stations: timerFolders.map(describeStation), serverNow: Date.now() });
+  const access = req.fdpAccess;
+  return res.json({
+    role: access.role,
+    location: access.location || null,
+    stations: foldersFor(access).map(describeStation),
+    serverNow: Date.now()
+  });
+});
+
+// Overzichtspagina's: beheer (alle stations) en per locatie (alleen eigen stations).
+const overviewTemplatePath = path.join(__dirname, 'views', 'overview.html');
+
+function sendOverview(res, config) {
+  let html;
+  try {
+    html = fs.readFileSync(overviewTemplatePath, 'utf8');
+  } catch (error) {
+    return res.status(500).send('Overzicht niet gevonden.');
+  }
+  const inject = '<meta name="robots" content="noindex, nofollow">'
+    + '<meta name="referrer" content="no-referrer">'
+    + '<script>window.FDPAccess = ' + JSON.stringify(config).replace(/</g, '\\u003c') + ';</script>';
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.send(html.replace('</head>', inject + '</head>'));
+}
+
+function sendInvalidLink(res) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(404).send('<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>Link niet geldig</title></head><body style="font-family:system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;background:#f4f4f5">'
+    + '<div style="text-align:center;padding:2rem"><h1 style="color:#b91c1c">Link niet geldig</h1>'
+    + '<p>Deze link werkt niet (meer). Vraag de juiste link voor jouw locatie.</p></div></body></html>');
+}
+
+app.get('/beheer/:key', (req, res) => {
+  const access = accessForKey(req.params.key);
+  if (!access || access.role !== 'owner') return sendInvalidLink(res);
+  return sendOverview(res, {
+    key: req.params.key,
+    role: 'owner',
+    locations: Object.keys(stationLocations).map((loc) => ({
+      id: loc,
+      label: stationLocations[loc].label,
+      path: '/locatie/' + accessKeys[loc]
+    }))
+  });
+});
+
+app.get('/locatie/:key', (req, res) => {
+  const access = accessForKey(req.params.key);
+  if (!access || access.role !== 'location') return sendInvalidLink(res);
+  return sendOverview(res, {
+    key: req.params.key,
+    role: 'location',
+    location: access.location,
+    label: stationLocations[access.location].label
+  });
 });
 
 app.post('/backoffice/api/stations/:folder/start', (req, res) => {
