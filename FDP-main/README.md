@@ -24,7 +24,7 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 
 - Staff open `/backoffice`, log in and click **Computer vrijgeven** for a station. The kiosk screen of that station then shows the time used and the cost in the bottom-right corner.
 - Rate: EUR 0.95 for the first 10 minutes, then EUR 0.95 per started 5 minutes.
-- Access per location: `/` is a neutral page without stations. Each location has its own secret link `/locatie/<key>` showing only its own stations; the owner link `/beheer/<key>` shows all stations (the former start page) plus the location links to share. The timer API checks the key on every request: a location key can only see and control its own stations (`x-access-key` header). `BACKOFFICE_PASSWORD`, if set, also gives owner access.
+- Access: no login is required. `/` and `/backoffice` show and control all stations (the API is open without a key). The location links `/locatie/<key>` show only that location's stations (a location key also limits the API to its own stations); `/beheer/<key>` shows everything plus the location links to share. These links are a convenience filter, not security.
 - The overview pages show under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged.
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.
 - Sessions are saved in `uploads/.station-sessions.json`, so a running timer survives a restart when `uploads` is on a persistent disk.

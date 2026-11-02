@@ -1193,14 +1193,11 @@ function foldersFor(access) {
   return loc ? timerFolders.filter((folder) => loc.folders.includes(folder)) : [];
 }
 
-// Controleert de sleutel; bij een station in de URL ook of dat bij de locatie hoort.
+// Geen wachtwoord nodig (op verzoek): zonder (geldige) sleutel is er volledige toegang,
+// zoals voorheen. Met een locatiesleutel zie en bedien je alleen die locatie.
 function requireBackoffice(req, res) {
   const key = String(req.get('x-access-key') || req.get('x-backoffice-key') || '');
-  const access = accessForKey(key);
-  if (!access) {
-    res.status(401).json({ error: 'Geen toegang. Gebruik de link van je locatie.' });
-    return false;
-  }
+  const access = accessForKey(key) || { role: 'owner' };
   const folder = req.params && req.params.folder;
   if (folder && access.role !== 'owner' && !foldersFor(access).includes(folder)) {
     res.status(403).json({ error: 'Dit station hoort niet bij jouw locatie.' });
@@ -1252,7 +1249,7 @@ app.get('/backoffice', (req, res) => {
 
 app.get('/backoffice/api/config', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ passwordRequired: true });
+  res.json({ passwordRequired: false });
 });
 
 app.get('/backoffice/api/stations', (req, res) => {
@@ -1294,6 +1291,11 @@ function sendInvalidLink(res) {
     + '<div style="text-align:center;padding:2rem"><h1 style="color:#b91c1c">Link niet geldig</h1>'
     + '<p>Deze link werkt niet (meer). Vraag de juiste link voor jouw locatie.</p></div></body></html>');
 }
+
+// Startpagina: weer het volledige overzicht van alle stations, zonder inloggen.
+function sendStartPage(req, res) { return sendOverview(res, { key: '', role: 'open' }); }
+app.get('/', sendStartPage);
+app.get('/index.html', sendStartPage);
 
 app.get('/beheer/:key', (req, res) => {
   const access = accessForKey(req.params.key);
