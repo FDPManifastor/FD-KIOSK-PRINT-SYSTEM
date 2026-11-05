@@ -1020,7 +1020,8 @@ app.delete('/delete-all/:folder', (req, res) => {
 //
 // De backoffice start per station een sessie; het kioskscherm toont dan de
 // verstreken tijd en de kosten rechtsonder. Tarief: EUR 0,95 voor de eerste
-// 10 minuten, daarna EUR 0,95 per begonnen 5 minuten.
+// 10 minuten, daarna EUR 0,95 per begonnen 5 minuten. Per station kan een
+// ander tarief gelden (stationPricingOverrides), bijv. om op de test te proberen.
 // Welke stations meedoen staat in STATION_TIMER_FOLDERS (komma-gescheiden),
 // standaard alle stations.
 // ---------------------------------------------------------------------------
@@ -1030,6 +1031,16 @@ const stationPricing = {
   stepCents: 95,
   stepMinutes: 5
 };
+// Afwijkend tarief per station: eerst op de teststation proberen.
+// Teststation: EUR 0,95 voor de eerste 10 minuten, daarna EUR 0,05 per begonnen minuut.
+const stationPricingOverrides = {
+  test_copy1: { baseCents: 95, baseMinutes: 10, stepCents: 5, stepMinutes: 1 }
+};
+function pricingFor(folder) {
+  return stationPricingOverrides[folder] || stationPricing;
+}
+// Stations waar de klant zelf op "Ik ben klaar" kan drukken (stopt de tijd).
+const selfFinishFolders = ['test_copy1'];
 const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','))
   .split(',')
   .map((folder) => folder.trim())
@@ -1044,11 +1055,12 @@ function stationLabel(folder) {
   return 'AMSTERDAM ' + folder.replace('copy', 'COPY ');
 }
 
-function calculateStationCostCents(elapsedMs) {
-  const baseMs = stationPricing.baseMinutes * 60 * 1000;
-  const stepMs = stationPricing.stepMinutes * 60 * 1000;
+function calculateStationCostCents(elapsedMs, pricing) {
+  const p = pricing || stationPricing;
+  const baseMs = p.baseMinutes * 60 * 1000;
+  const stepMs = p.stepMinutes * 60 * 1000;
   const extraSteps = elapsedMs > baseMs ? Math.ceil((elapsedMs - baseMs) / stepMs) : 0;
-  return stationPricing.baseCents + extraSteps * stationPricing.stepCents;
+  return p.baseCents + extraSteps * p.stepCents;
 }
 
 function loadStationSessions() {
@@ -1076,7 +1088,7 @@ function saveStationSessions() {
 function describeStation(folder) {
   const session = stationSessions.get(folder) || null;
   const now = Date.now();
-  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: stationPricing };
+  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder) };
 
   if (!session) return { ...base, status: 'idle' };
 
@@ -1092,7 +1104,8 @@ function describeStation(folder) {
     stoppedAt: session.stoppedAt || null,
     pausedAt: session.pausedAt || null,
     elapsedMs,
-    costCents: calculateStationCostCents(elapsedMs)
+    costCents: calculateStationCostCents(elapsedMs, pricingFor(folder)),
+    stoppedBy: session.stoppedBy || null
   };
 }
 
@@ -1350,16 +1363,34 @@ app.post('/backoffice/api/stations/:folder/stop', (req, res) => {
     return res.status(409).json({ error: 'Deze computer heeft geen lopende sessie.', station: describeStation(folder) });
   }
 
+  return res.json({ ok: true, station: stopStationSession(folder, current, 'staff') });
+});
+
+function stopStationSession(folder, current, by) {
   const stopTime = Date.now();
   if (current.pausedAt) {
     current.pausedTotalMs = (current.pausedTotalMs || 0) + (stopTime - current.pausedAt);
     current.pausedAt = null;
   }
   current.stoppedAt = stopTime;
+  current.stoppedBy = by;
   saveStationSessions();
   const station = describeStation(folder);
-  console.log(`Station ${folder} gestopt na ${Math.round(station.elapsedMs / 1000)}s, kosten ${station.costCents} cent.`);
-  return res.json({ ok: true, station });
+  console.log(`Station ${folder} gestopt (${by}) na ${Math.round(station.elapsedMs / 1000)}s, kosten ${station.costCents} cent.`);
+  return station;
+}
+
+// De klant drukt op het kioskscherm op "Ik ben klaar": tijd stopt, kiosk gaat op slot.
+app.post('/station/finish/:folder', (req, res) => {
+  const folder = req.params.folder;
+  if (!timerFolders.includes(folder) || !selfFinishFolders.includes(folder)) {
+    return res.status(404).json({ error: 'Niet beschikbaar voor dit station.' });
+  }
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt) {
+    return res.status(409).json({ error: 'Er is geen lopende sessie.', station: describeStation(folder) });
+  }
+  return res.json({ ok: true, station: stopStationSession(folder, current, 'customer') });
 });
 
 // Pause: time and cost stand still until resumed.

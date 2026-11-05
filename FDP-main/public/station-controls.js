@@ -130,7 +130,7 @@
     if (station.status === 'stopped') {
       return {
         cls: 'st-panel st-panel--stopped',
-        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' · te betalen</p><p class="st-sub" style="margin-top:-.4rem">Alleen tijd · excl. printen</p>'
+        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' · te betalen' + (station.stoppedBy === 'customer' ? ' · klant heeft afgerond' : '') + '</p><p class="st-sub" style="margin-top:-.4rem">Alleen tijd · excl. printen</p>'
           + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + button('reset', folder, 'st-clear', 'Betaald') + '</div>'
       };
     }

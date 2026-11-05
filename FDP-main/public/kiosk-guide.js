@@ -13,6 +13,7 @@
       previewText: 'Ziet het er goed uit? Klik op de groene knop Print.',
       printedTitle: 'Kies je printer en klik op Afdrukken',
       printedText: 'Klaar met printen? Klik op Nieuwe sessie zodat je bestanden worden verwijderd.',
+      printedTextFinish: 'Klaar met printen? Tik rechtsonder op Ik ben klaar. De tijd stopt en je rekent af bij de balie.',
       endedTitle: 'Bedankt!',
       endedText: 'Je sessie is gestopt. Rond af en betaal bij de balie.',
       pointerTitle: 'Klik hier om te printen'
@@ -27,6 +28,7 @@
       previewText: 'Looks good? Click the green Print button.',
       printedTitle: 'Choose your printer and click Print',
       printedText: 'Done printing? Click New session so your files are deleted.',
+      printedTextFinish: 'Done printing? Tap I\'m done at the bottom right. The clock stops and you pay at the counter.',
       endedTitle: 'Thank you!',
       endedText: 'Your session has ended. Please pay at the counter.',
       pointerTitle: 'Click here to print'
@@ -129,6 +131,11 @@
   function previewVisible() {
     const preview = document.getElementById('preview-content');
     return Boolean(preview && !preview.classList.contains('hidden'));
+  }
+
+  function selfFinishOn() {
+    const st = window.FDPStationTimer && window.FDPStationTimer.getStation();
+    return !!(st && st.selfFinish);
   }
 
   function stationStatus() {
@@ -294,7 +301,7 @@
     guide.innerHTML = '<div class="fdp-guide__num">' + number + '</div>'
       + '<div><p class="fdp-guide__eyebrow">' + t('next') + '</p>'
       + '<p class="fdp-guide__title">' + t(step + 'Title') + '</p>'
-      + '<p class="fdp-guide__text">' + t(step + 'Text') + '</p>'
+      + '<p class="fdp-guide__text">' + t(step === 'printed' && selfFinishOn() ? 'printedTextFinish' : step + 'Text') + '</p>'
       + '<div class="fdp-guide__dots">' + dots + '</div></div>'
       + '<div class="fdp-guide__timer"><span></span></div>';
 

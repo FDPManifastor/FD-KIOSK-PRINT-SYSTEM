@@ -23,7 +23,8 @@ The app listens on `PORT` and stores uploads in `UPLOADS_ROOT`.
 ## Station timer and auto-guide
 
 - Staff open `/backoffice`, log in and click **Computer vrijgeven** for a station. The kiosk screen of that station then shows the time used and the cost in the bottom-right corner.
-- Rate: EUR 0.95 for the first 10 minutes, then EUR 0.95 per started 5 minutes.
+- Rate: EUR 0.95 for the first 10 minutes, then EUR 0.95 per started 5 minutes. A station can have its own rate (`stationPricingOverrides` in `index.js`); TEST COPY 1 currently uses EUR 0.95 for the first 10 minutes, then EUR 0.05 per started minute.
+- Customer self-finish (stations in `selfFinishFolders`, now only TEST COPY 1; `kiosk-session.js`): an "Ik ben klaar" button above the timer stops the clock (`POST /station/finish/:folder`) and locks the kiosk for payment at the counter. One minute before the first 10 minutes end, a warning pop-up grows out of the timer for 15 seconds (tap to close), and the price list gets a line with the per-minute rate. To roll out: add the stations to `selfFinishFolders` / `stationPricingOverrides`; the script only acts where the server enables it.
 - Access: no login is required. `/` and `/backoffice` show and control all stations (the API is open without a key). The location links `/locatie/<key>` show only that location's stations (a location key also limits the API to its own stations); `/beheer/<key>` shows everything plus the location links to share. These links are a convenience filter, not security.
 - The overview pages show under every station card the live time and amount, with **Aan**, **Pauze/Hervat** and **Uit**. Paused time is not charged.
 - **Stoppen en afrekenen** freezes time and total; the kiosk shows the amount to pay. **Betaald, vrijmaken** clears it.

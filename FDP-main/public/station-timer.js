@@ -11,7 +11,7 @@
     nl: {
       label: 'Gebruikstijd',
       cost: 'Kosten',
-      next: 'Volgende €0,95 over',
+      next: 'Volgende {price} over',
       endedTitle: 'Sessie beëindigd',
       endedText: 'Betaal bij de balie',
       total: 'Totaal',
@@ -22,7 +22,7 @@
     en: {
       label: 'Time used',
       cost: 'Cost',
-      next: 'Next €0.95 in',
+      next: 'Next {price} in',
       endedTitle: 'Session ended',
       endedText: 'Please pay at the counter',
       total: 'Total',
@@ -142,7 +142,7 @@
         + '</div>'
         + (paused
           ? '<p class="fdp-station-timer__next">' + t('pausedText') + '<span data-part="next" hidden></span></p>'
-          : '<p class="fdp-station-timer__next">' + t('next') + ' <span data-part="next"></span></p>')
+          : '<p class="fdp-station-timer__next">' + t('next').replace('{price}', euro(station.pricing.stepCents)) + ' <span data-part="next"></span></p>')
         + '<p class="fdp-station-timer__scope">' + t('scope') + '</p>';
     }
 
@@ -171,7 +171,15 @@
 
   window.FDPStationTimer = {
     getStatus: function () { return loaded ? station.status : null; },
-    getStation: function () { return loaded ? station : null; }
+    getStation: function () { return loaded ? station : null; },
+    // Betaalde tijd op dit moment (ms), ook tussen twee serverantwoorden in.
+    getElapsedMs: function () {
+      if (!loaded || !station || typeof station.elapsedMs !== 'number') return 0;
+      if (station.status !== 'active') return station.elapsedMs;
+      return station.elapsedMs + Math.max(0, Date.now() + clockOffset - station.serverNow);
+    },
+    getBox: function () { return box; },
+    refresh: function () { return poll(); }
   };
 
   poll();
