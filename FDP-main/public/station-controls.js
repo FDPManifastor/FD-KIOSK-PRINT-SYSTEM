@@ -24,6 +24,10 @@
     '.st-badge{border-radius:999px;padding:.12rem .55rem;color:#fff;background:#9ca3af}',
     '.st-panel--active .st-badge{background:#16a34a}',
     '.st-panel--paused .st-badge{background:#f59e0b}',
+    '.st-panel--idle{border-color:#ea580c;background:#fff7ed;animation:stIdle 1.6s ease-in-out infinite}',
+    '.st-panel--idle .st-badge{background:#ea580c}',
+    '.st-alert{margin:.1rem 0 .55rem;font-size:.8rem;font-weight:800;color:#9a3412}',
+    '@keyframes stIdle{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.45)}50%{box-shadow:0 0 0 8px rgba(234,88,12,0)}}',
     '.st-panel--stopped .st-badge{background:#dc2626}',
     '.st-nums{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin:.35rem 0 .1rem}',
     '.st-time{font-size:1.7rem;font-weight:900;color:#111827;line-height:1}',
@@ -145,9 +149,12 @@
     }
 
     if (station.status === 'paused') {
+      const idle = station.pausedBy === 'idle';
       return {
-        cls: 'st-panel st-panel--paused',
-        html: head + nums + '<p class="st-sub">Open sinds ' + clock(station.startedAt) + ' · gepauzeerd om ' + clock(station.pausedAt) + '</p>'
+        cls: 'st-panel st-panel--paused' + (idle ? ' st-panel--idle' : ''),
+        html: head.replace('>Pauze<', idle ? '>Inactief<' : '>Pauze<') + nums
+          + (idle ? '<p class="st-alert">Klant reageerde niet op "Ben je nog bezig?" · tijd staat stil. Even gaan kijken.</p>' : '')
+          + '<p class="st-sub">Open sinds ' + clock(station.startedAt) + ' · gepauzeerd om ' + clock(station.pausedAt) + '</p>'
           + '<div class="st-actions">' + button('resume', folder, 'st-on', 'Hervat') + button('stop', folder, 'st-off', 'Uit') + '</div>'
       };
     }
@@ -165,7 +172,7 @@
 
     panels.forEach(function (panel, folder) {
       const station = stations.get(folder);
-      const layoutKey = station ? station.status + '-' + station.startedAt + '-' + (station.pausedAt || '') + (station.free ? '-free' : '') : 'disabled';
+      const layoutKey = station ? station.status + '-' + station.startedAt + '-' + (station.pausedAt || '') + (station.pausedBy || '') + (station.free ? '-free' : '') : 'disabled';
       if (panel.layout !== layoutKey) {
         const layout = layoutFor(folder, station);
         panel.el.className = layout.cls;

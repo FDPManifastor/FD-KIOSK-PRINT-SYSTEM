@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dagoverzicht · FD Printing Center</title>
+<style>
+  :root{--red:#dc2626;--ink:#18181b;--muted:#71717a;--line:#e4e4e7;--bg:#f4f4f5;--card:#fff;--green:#15803d;--blue:#1d4ed8}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif}
+  header{background:linear-gradient(90deg,#991b1b,#dc2626 60%,#ef4444);color:#fff}
+  .wrap{max-width:68rem;margin:0 auto;padding:0 1rem}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:1.2rem;padding-bottom:1.2rem;flex-wrap:wrap}
+  header small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;opacity:.8}
+  header h1{margin:.1rem 0 0;font-size:1.6rem;font-weight:900}
+  header a{color:#fff;font-weight:800;text-decoration:none;background:rgba(255,255,255,.15);border-radius:.6rem;padding:.55rem .9rem}
+  .bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:1.4rem 0 1rem}
+  .bar button,.bar select{font:inherit;font-weight:800;border:1px solid var(--line);background:#fff;border-radius:.6rem;padding:.55rem .9rem;min-height:44px;cursor:pointer}
+  .bar .day{font-size:1.25rem;font-weight:900;margin-right:auto}
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem;margin-bottom:1.4rem}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1rem}
+  .tile small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .tile strong{display:block;margin-top:.3rem;font-size:1.8rem;font-weight:900;font-variant-numeric:tabular-nums}
+  .tile--money strong{color:var(--green)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:1rem;overflow:hidden}
+  th,td{padding:.75rem .9rem;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  th{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:#fafafa}
+  td.num,th.num{text-align:right}
+  tr.station{cursor:pointer}
+  tr.station:hover td{background:#fafafa}
+  tr.station td:first-child::before{content:"▸";color:var(--red);margin-right:.45rem;display:inline-block;transition:transform .2s}
+  tr.station.open td:first-child::before{transform:rotate(90deg)}
+  tr.detail td{background:#fafafa;padding:0}
+  tr.detail table{border:0;border-radius:0;background:transparent}
+  tr.detail td td,tr.detail th{font-size:.85rem;padding:.5rem .9rem .5rem 2rem}
+  tr.total td{font-weight:900;background:#fef2f2}
+  .tag{display:inline-block;border-radius:999px;padding:.08rem .5rem;font-size:.72rem;font-weight:800;color:#fff;background:#71717a}
+  .tag--free{background:var(--blue)}.tag--customer{background:var(--green)}.tag--idle{background:#ea580c}
+  .empty{padding:2rem;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:1rem}
+  .note{color:var(--muted);font-size:.85rem;margin:1rem 0 2rem}
+  .error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:.6rem;padding:.7rem .9rem;font-weight:700}
+  @media (max-width:720px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.hide-sm{display:none}th,td{padding:.6rem .5rem}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div><small>FD Printing Center</small><h1>Dagoverzicht computers</h1></div>
+  <a id="back" href="/">← Overzicht</a>
+</div></header>
+<main class="wrap">
+  <div class="bar">
+    <span class="day" id="day-label">Laden…</span>
+    <button type="button" id="prev">← Vorige dag</button>
+    <select id="day-select" aria-label="Kies een dag"></select>
+    <button type="button" id="next">Volgende dag →</button>
+  </div>
+  <div id="error" class="error" hidden></div>
+  <section class="tiles">
+    <div class="tile"><small>Sessies</small><strong id="t-sessions">–</strong></div>
+    <div class="tile"><small>Totale tijd</small><strong id="t-time">–</strong></div>
+    <div class="tile tile--money"><small>Opbrengst tijd</small><strong id="t-revenue">–</strong></div>
+    <div class="tile"><small>Vrije sessies</small><strong id="t-free">–</strong></div>
+  </section>
+  <div id="table"></div>
+  <p class="note">Alleen afgeronde sessies (gestopt door klant of medewerker). Opbrengst is alleen computergebruik, excl. printen. Tik op een station voor de losse sessies. Dag volgens Nederlandse tijd.</p>
+</main>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var key = params.get('key') || '';
+  var day = params.get('dag') || '';
+  var days = [];
+  var open = {};
+  if (key) document.getElementById('back').href = '/';
+
+  function euro(c) { return '€' + (c / 100).toFixed(2).replace('.', ','); }
+  function dur(ms) {
+    var m = Math.round(ms / 60000);
+    var h = Math.floor(m / 60);
+    return h ? h + ' u ' + String(m % 60).padStart(2, '0') + ' min' : m + ' min';
+  }
+  function clock(ts) { return new Date(ts).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }); }
+  function niceDay(d, today) {
+    var label = new Date(d + 'T12:00:00Z').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    return (d === today ? 'Vandaag · ' : '') + label;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function render(data) {
+    day = data.day; days = data.days;
+    document.getElementById('day-label').textContent = niceDay(data.day, data.today);
+    var sel = document.getElementById('day-select');
+    sel.innerHTML = days.map(function (d) { return '<option value="' + d + '"' + (d === day ? ' selected' : '') + '>' + d + '</option>'; }).join('');
+    var i = days.indexOf(day);
+    document.getElementById('prev').disabled = i === -1 || i >= days.length - 1;
+    document.getElementById('next').disabled = i <= 0;
+    document.getElementById('t-sessions').textContent = data.totals.sessions;
+    document.getElementById('t-time').textContent = dur(data.totals.totalMs);
+    document.getElementById('t-revenue').textContent = euro(data.totals.revenueCents);
+    document.getElementById('t-free').textContent = data.totals.freeSessions;
+
+    if (!data.stations.length) {
+      document.getElementById('table').innerHTML = '<div class="empty">Nog geen stations met dagoverzicht.</div>';
+      return;
+    }
+    var rows = data.stations.map(function (st) {
+      var row = '<tr class="station' + (open[st.folder] ? ' open' : '') + '" data-folder="' + st.folder + '"><td><strong>' + esc(st.name) + '</strong></td>'
+        + '<td class="num">' + st.sessions + '</td><td class="num">' + dur(st.totalMs) + '</td><td class="num"><strong>' + euro(st.revenueCents) + '</strong></td>'
+        + '<td class="num">' + st.freeSessions + '</td><td class="num hide-sm">' + st.customerFinished + '</td><td class="num hide-sm">' + st.idlePauses + '</td></tr>';
+      if (open[st.folder]) {
+        row += '<tr class="detail"><td colspan="7">' + (st.list.length
+          ? '<table><thead><tr><th>Tijd</th><th class="num">Duur</th><th class="num">Bedrag</th><th>Afgerond door</th></tr></thead><tbody>'
+            + st.list.map(function (e) {
+              var tags = (e.free ? '<span class="tag tag--free">Vrij</span> ' : '')
+                + (e.stoppedBy === 'customer' ? '<span class="tag tag--customer">Klant</span>' : '<span class="tag">Medewerker</span>')
+                + (e.idlePauses ? ' <span class="tag tag--idle">' + e.idlePauses + '× inactief</span>' : '');
+              return '<tr><td>' + clock(e.startedAt) + ' – ' + clock(e.stoppedAt) + '</td><td class="num">' + dur(e.elapsedMs) + '</td><td class="num">' + (e.free ? 'Vrij' : euro(e.costCents)) + '</td><td>' + tags + '</td></tr>';
+            }).join('') + '</tbody></table>'
+          : '<p style="padding:.8rem 2rem;margin:0;color:#71717a">Geen sessies op deze dag.</p>') + '</td></tr>';
+      }
+      return row;
+    }).join('');
+    document.getElementById('table').innerHTML = '<table><thead><tr><th>Station</th><th class="num">Sessies</th><th class="num">Tijd</th><th class="num">Opbrengst</th><th class="num">Vrij</th><th class="num hide-sm">Zelf klaar</th><th class="num hide-sm">Inactief</th></tr></thead><tbody>'
+      + rows + '<tr class="total"><td>Totaal</td><td class="num">' + data.totals.sessions + '</td><td class="num">' + dur(data.totals.totalMs) + '</td><td class="num">' + euro(data.totals.revenueCents) + '</td><td class="num">' + data.totals.freeSessions + '</td><td class="hide-sm"></td><td class="hide-sm"></td></tr></tbody></table>';
+  }
+
+  async function load() {
+    var err = document.getElementById('error');
+    try {
+      var r = await fetch('/backoffice/api/report' + (day ? '?day=' + encodeURIComponent(day) : ''), { cache: 'no-store', headers: { 'x-access-key': key } });
+      var data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Status ' + r.status);
+      err.hidden = true;
+      render(data);
+    } catch (e) {
+      err.textContent = 'Dagoverzicht kon niet geladen worden: ' + e.message;
+      err.hidden = false;
+    }
+  }
+
+  function go(d) { day = d; open = {}; load(); }
+  document.getElementById('prev').addEventListener('click', function () { var i = days.indexOf(day); if (i < days.length - 1) go(days[i + 1]); });
+  document.getElementById('next').addEventListener('click', function () { var i = days.indexOf(day); if (i > 0) go(days[i - 1]); });
+  document.getElementById('day-select').addEventListener('change', function (e) { go(e.target.value); });
+  document.getElementById('table').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr.station');
+    if (!tr) return;
+    var f = tr.getAttribute('data-folder');
+    open[f] = !open[f];
+    load();
+  });
+  load();
+  setInterval(load, 30000);
+})();
+</script>
+</body>
+</html>

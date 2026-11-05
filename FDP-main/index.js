@@ -37,11 +37,22 @@ app.use('/healthz', (req, res) => {
   res.status(200).send('ok');
 });
 
-const copyFolders = ['copy1', 'copy2', 'copy3', 'copy4'];
-const utrechtFolders = ['utrecht_copy1', 'utrecht_copy2', 'utrecht_copy3'];
-const hoogvlietFolders = ['hoogvliet_copy1', 'hoogvliet_copy2'];
-const testFolders = ['test_copy1'];
-const validFolders = [...copyFolders, ...utrechtFolders, ...hoogvlietFolders, ...testFolders];
+// ---------------------------------------------------------------------------
+// Stations: alles staat in stations.json (locaties, namen, tarief, klaar-knop,
+// vrije sessie, inactiviteitscheck). Per station kan elke instelling uit
+// 'defaults' overschreven worden.
+// ---------------------------------------------------------------------------
+const stationConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'stations.json'), 'utf8'));
+const stationSettings = new Map(stationConfig.stations.map((station) => {
+  const merged = { ...stationConfig.defaults, ...station };
+  merged.pricing = { ...stationConfig.defaults.pricing, ...(station.pricing || {}) };
+  merged.name = station.name || station.label;
+  return [station.folder, merged];
+}));
+const validFolders = stationConfig.stations.map((station) => station.folder);
+function stationSetting(folder) {
+  return stationSettings.get(folder) || null;
+}
 const maxUploadFilesPerRequest = 50;
 const accessLinkTtlMs = 10 * 60 * 1000;
 const supportedUploadExtensions = new Set(['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tif', '.tiff', '.avif', '.heic', '.heif']);
@@ -554,16 +565,9 @@ function requireActivatedStation(folder) {
 }
 
 // Upload routes
-app.post('/upload_copy1', requireActivatedStation('copy1'), createUploadMiddleware('uploads/copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy1'));
-app.post('/upload_copy2', requireActivatedStation('copy2'), createUploadMiddleware('uploads/copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy2'));
-app.post('/upload_copy3', requireActivatedStation('copy3'), createUploadMiddleware('uploads/copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy3'));
-app.post('/upload_copy4', requireActivatedStation('copy4'), createUploadMiddleware('uploads/copy4').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('copy4'));
-app.post('/upload_utrecht_copy1', requireActivatedStation('utrecht_copy1'), createUploadMiddleware('uploads/utrecht_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy1'));
-app.post('/upload_utrecht_copy2', requireActivatedStation('utrecht_copy2'), createUploadMiddleware('uploads/utrecht_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy2'));
-app.post('/upload_utrecht_copy3', requireActivatedStation('utrecht_copy3'), createUploadMiddleware('uploads/utrecht_copy3').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('utrecht_copy3'));
-app.post('/upload_hoogvliet_copy1', requireActivatedStation('hoogvliet_copy1'), createUploadMiddleware('uploads/hoogvliet_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy1'));
-app.post('/upload_hoogvliet_copy2', requireActivatedStation('hoogvliet_copy2'), createUploadMiddleware('uploads/hoogvliet_copy2').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('hoogvliet_copy2'));
-app.post('/upload_test_copy1', requireActivatedStation('test_copy1'), createUploadMiddleware('uploads/test_copy1').fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute('test_copy1'));
+validFolders.forEach((folder) => {
+  app.post('/upload_' + folder, requireActivatedStation(folder), createUploadMiddleware('uploads/' + folder).fields([{ name: 'mijnBestand', maxCount: maxUploadFilesPerRequest }, { name: 'mijnBestand[]', maxCount: maxUploadFilesPerRequest }]), createUploadRoute(folder));
+});
 
 // Compatibility route so QR links also work when .html is omitted.
 app.get('/upload_test_copy1', (req, res) => {
@@ -1019,28 +1023,21 @@ app.delete('/delete-all/:folder', (req, res) => {
 // Station timer (computer vrijgeven vanuit de backoffice)
 //
 // De backoffice start per station een sessie; het kioskscherm toont dan de
-// verstreken tijd en de kosten rechtsonder. Tarief: EUR 0,95 voor de eerste
-// 10 minuten, daarna EUR 0,05 per begonnen minuut. Per station kan een
-// ander tarief gelden (stationPricingOverrides), bijv. om op de test te proberen.
+// verstreken tijd en de kosten rechtsonder. Tarief en andere instellingen
+// per station staan in stations.json.
 // Welke stations meedoen staat in STATION_TIMER_FOLDERS (komma-gescheiden),
 // standaard alle stations.
 // ---------------------------------------------------------------------------
-// Tarief: EUR 0,95 voor de eerste 10 minuten, daarna EUR 0,05 per begonnen minuut.
-const stationPricing = {
-  baseCents: 95,
-  baseMinutes: 10,
-  stepCents: 5,
-  stepMinutes: 1
-};
-// Afwijkend tarief per station (bijv. om eerst op de teststation te proberen).
-const stationPricingOverrides = {};
+// Tarief, klaar-knop en vrije sessie komen uit stations.json.
+const stationPricing = stationConfig.defaults.pricing;
 function pricingFor(folder) {
-  return stationPricingOverrides[folder] || stationPricing;
+  const settings = stationSetting(folder);
+  return settings ? settings.pricing : stationPricing;
 }
 // Stations waar de klant zelf op "Ik ben klaar" kan drukken (stopt de tijd).
-const selfFinishFolders = validFolders.slice();
+const selfFinishFolders = validFolders.filter((folder) => stationSetting(folder).selfFinish);
 // Stations waar het personeel een vrije sessie kan starten (geen tijdslimiet, geen kosten).
-const freeSessionFolders = validFolders.slice();
+const freeSessionFolders = validFolders.filter((folder) => stationSetting(folder).freeSession);
 const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','))
   .split(',')
   .map((folder) => folder.trim())
@@ -1048,11 +1045,16 @@ const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','
 const stationStateFile = path.join('uploads', '.station-sessions.json');
 const stationSessions = new Map();
 
+// Inactiviteitscheck: na X minuten zonder aanraking vraagt de kiosk 'Ben je nog bezig?'.
+function idleCheckFor(folder) {
+  const settings = stationSetting(folder);
+  if (!settings || !settings.idleCheck) return null;
+  return { minutes: settings.idleMinutes, countdownSeconds: settings.idleCountdownSeconds };
+}
+
 function stationLabel(folder) {
-  if (folder.startsWith('test_')) return 'TEST ' + folder.replace('test_', '').replace('copy', 'COPY ');
-  if (folder.startsWith('utrecht_')) return 'UTRECHT ' + folder.replace('utrecht_', '').replace('copy', 'COPY ');
-  if (folder.startsWith('hoogvliet_')) return 'HOOGVLIET ' + folder.replace('hoogvliet_', '').replace('copy', 'COPY ');
-  return 'AMSTERDAM ' + folder.replace('copy', 'COPY ');
+  const settings = stationSetting(folder);
+  return settings ? settings.name : folder;
 }
 
 function calculateStationCostCents(elapsedMs, pricing) {
@@ -1088,7 +1090,7 @@ function saveStationSessions() {
 function describeStation(folder) {
   const session = stationSessions.get(folder) || null;
   const now = Date.now();
-  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder), freeSessionAllowed: freeSessionFolders.includes(folder) };
+  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder), freeSessionAllowed: freeSessionFolders.includes(folder), idleCheck: idleCheckFor(folder) };
 
   if (!session) return { ...base, status: 'idle' };
 
@@ -1103,6 +1105,7 @@ function describeStation(folder) {
     startedAt: session.startedAt,
     stoppedAt: session.stoppedAt || null,
     pausedAt: session.pausedAt || null,
+    pausedBy: session.pausedAt ? (session.pausedBy || 'staff') : null,
     elapsedMs,
     free: !!session.free,
     costCents: session.free ? 0 : calculateStationCostCents(elapsedMs, pricingFor(folder)),
@@ -1129,11 +1132,10 @@ function sessionElapsedMs(session, now) {
 // eenmalig gemaakt en bewaard in uploads/.access-keys.json.
 // BACKOFFICE_PASSWORD (als die is ingesteld) geeft ook volledige toegang.
 // ---------------------------------------------------------------------------
-const stationLocations = {
-  amsterdam: { label: 'Amsterdam', folders: copyFolders },
-  utrecht: { label: 'Utrecht', folders: utrechtFolders },
-  hoogvliet: { label: 'Hoogvliet', folders: hoogvlietFolders }
-};
+const stationLocations = Object.fromEntries(Object.entries(stationConfig.locations).map(([loc, info]) => [
+  loc,
+  { label: info.label, folders: validFolders.filter((folder) => stationSetting(folder).location === loc) }
+]));
 const accessKeyEnvNames = {
   owner: 'OWNER_ACCESS_KEY',
   amsterdam: 'ACCESS_KEY_AMSTERDAM',
@@ -1381,11 +1383,143 @@ function stopStationSession(folder, current, by) {
   }
   current.stoppedAt = stopTime;
   current.stoppedBy = by;
+  current.pausedBy = null;
   saveStationSessions();
   const station = describeStation(folder);
+  logFinishedSession(folder, current, station);
   console.log(`Station ${folder} gestopt (${by}) na ${Math.round(station.elapsedMs / 1000)}s, kosten ${station.costCents} cent.`);
   return station;
 }
+
+// ---------------------------------------------------------------------------
+// Sessielog en dagoverzicht
+//
+// Elke afgeronde sessie (stations met "sessionLog" in stations.json) komt als
+// één regel in uploads/.session-log.jsonl. /rapport toont per dag en per
+// station het aantal sessies, de totale tijd, de opbrengst en vrije sessies.
+// ---------------------------------------------------------------------------
+const sessionLogFile = path.join('uploads', '.session-log.jsonl');
+const reportTimeZone = 'Europe/Amsterdam';
+
+function dayKey(timestamp) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: reportTimeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(timestamp));
+}
+
+function logFinishedSession(folder, session, station) {
+  const settings = stationSetting(folder);
+  if (!settings || !settings.sessionLog) return;
+  const entry = {
+    folder,
+    name: station.label,
+    location: settings.location || null,
+    day: dayKey(session.startedAt),
+    startedAt: session.startedAt,
+    stoppedAt: session.stoppedAt,
+    elapsedMs: station.elapsedMs,
+    pausedMs: session.pausedTotalMs || 0,
+    idlePauses: session.idlePauses || 0,
+    free: !!session.free,
+    costCents: station.costCents,
+    stoppedBy: session.stoppedBy
+  };
+  try {
+    fs.appendFileSync(sessionLogFile, JSON.stringify(entry) + '\n');
+  } catch (error) {
+    console.warn('Sessielog kon niet opgeslagen worden:', error.message);
+  }
+}
+
+function readSessionLog() {
+  try {
+    if (!fs.existsSync(sessionLogFile)) return [];
+    return fs.readFileSync(sessionLogFile, 'utf8').split('\n').filter(Boolean).map((line) => {
+      try { return JSON.parse(line); } catch (error) { return null; }
+    }).filter(Boolean);
+  } catch (error) {
+    console.warn('Sessielog kon niet gelezen worden:', error.message);
+    return [];
+  }
+}
+
+app.get('/backoffice/api/report', (req, res) => {
+  if (!requireBackoffice(req, res)) return;
+  const access = accessForKey(req.get('x-access-key') || '') || { role: 'owner' };
+  const allowed = foldersFor(access).filter((folder) => stationSetting(folder).sessionLog);
+  const today = dayKey(Date.now());
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.day || '')) ? String(req.query.day) : today;
+  const entries = readSessionLog().filter((entry) => allowed.includes(entry.folder));
+  const days = Array.from(new Set(entries.map((entry) => entry.day).concat(today))).sort().reverse();
+  const ofDay = entries.filter((entry) => entry.day === day);
+  const stations = allowed.map((folder) => {
+    const list = ofDay.filter((entry) => entry.folder === folder);
+    return {
+      folder,
+      name: stationLabel(folder),
+      sessions: list.length,
+      paidSessions: list.filter((entry) => !entry.free).length,
+      freeSessions: list.filter((entry) => entry.free).length,
+      totalMs: list.reduce((sum, entry) => sum + entry.elapsedMs, 0),
+      revenueCents: list.reduce((sum, entry) => sum + (entry.free ? 0 : entry.costCents), 0),
+      customerFinished: list.filter((entry) => entry.stoppedBy === 'customer').length,
+      idlePauses: list.reduce((sum, entry) => sum + (entry.idlePauses || 0), 0),
+      list: list.sort((a, b) => a.startedAt - b.startedAt)
+    };
+  });
+  const totals = stations.reduce((sum, st) => ({
+    sessions: sum.sessions + st.sessions,
+    freeSessions: sum.freeSessions + st.freeSessions,
+    totalMs: sum.totalMs + st.totalMs,
+    revenueCents: sum.revenueCents + st.revenueCents
+  }), { sessions: 0, freeSessions: 0, totalMs: 0, revenueCents: 0 });
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({ day, today, days, timeZone: reportTimeZone, stations, totals });
+});
+
+app.get('/rapport', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.sendFile(path.join(__dirname, 'public', 'rapport.html'));
+});
+
+// ---------------------------------------------------------------------------
+// Inactiviteitscheck (stations met "idleCheck" in stations.json)
+//
+// De kiosk vraagt na een tijd zonder aanraking "Ben je nog bezig?". Reageert
+// niemand, dan zet de kiosk de tijd op pauze (pausedBy: 'idle'); het overzicht
+// laat dat aan het personeel zien. Tikt de klant later, dan loopt de tijd door.
+// ---------------------------------------------------------------------------
+app.post('/station/idle/:folder', (req, res) => {
+  const folder = req.params.folder;
+  if (!timerFolders.includes(folder) || !idleCheckFor(folder)) {
+    return res.status(404).json({ error: 'Niet beschikbaar voor dit station.' });
+  }
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt || current.pausedAt) {
+    return res.status(409).json({ error: 'Er is geen lopende sessie.', station: describeStation(folder) });
+  }
+  current.pausedAt = Date.now();
+  current.pausedBy = 'idle';
+  current.idlePauses = (current.idlePauses || 0) + 1;
+  saveStationSessions();
+  console.log(`Station ${folder} op pauze gezet: klant niet actief.`);
+  return res.json({ ok: true, station: describeStation(folder) });
+});
+
+app.post('/station/continue/:folder', (req, res) => {
+  const folder = req.params.folder;
+  if (!timerFolders.includes(folder) || !idleCheckFor(folder)) {
+    return res.status(404).json({ error: 'Niet beschikbaar voor dit station.' });
+  }
+  const current = stationSessions.get(folder);
+  if (!current || current.stoppedAt || !current.pausedAt || current.pausedBy !== 'idle') {
+    return res.status(409).json({ error: 'Deze sessie staat niet op pauze door inactiviteit.', station: describeStation(folder) });
+  }
+  current.pausedTotalMs = (current.pausedTotalMs || 0) + (Date.now() - current.pausedAt);
+  current.pausedAt = null;
+  current.pausedBy = null;
+  saveStationSessions();
+  return res.json({ ok: true, station: describeStation(folder) });
+});
 
 // De klant drukt op het kioskscherm op "Ik ben klaar": tijd stopt, kiosk gaat op slot.
 app.post('/station/finish/:folder', (req, res) => {
@@ -1412,6 +1546,7 @@ app.post('/backoffice/api/stations/:folder/pause', (req, res) => {
   }
 
   current.pausedAt = Date.now();
+  current.pausedBy = 'staff';
   saveStationSessions();
   return res.json({ ok: true, station: describeStation(folder) });
 });
@@ -1428,6 +1563,7 @@ app.post('/backoffice/api/stations/:folder/resume', (req, res) => {
 
   current.pausedTotalMs = (current.pausedTotalMs || 0) + (Date.now() - current.pausedAt);
   current.pausedAt = null;
+  current.pausedBy = null;
   saveStationSessions();
   return res.json({ ok: true, station: describeStation(folder) });
 });
@@ -1449,8 +1585,19 @@ app.post('/backoffice/api/stations/:folder/reset', (req, res) => {
 });
 
 // Browser page
+// Overzicht van alle bestanden van alle stations: alleen via de beheerlink van de eigenaar.
+// De oude openbare /browser is uitgeschakeld.
 app.get('/browser', (req, res) => {
-  res.send(`<!DOCTYPE html><html><head><title>File Browser</title><style>body{font-family:Arial;margin:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;padding:20px;border-radius:8px}h1{color:#333}.folder-section{margin:20px 0;padding:15px;border:1px solid #ddd;border-radius:5px;background:#fafafa}.folder-title{font-weight:bold;font-size:18px;color:#dc2626;margin-bottom:10px}.file-list{list-style:none;padding:0}.file-item{padding:8px;margin:5px 0;background:#fff;border-left:3px solid #dc2626;display:flex;justify-content:space-between;align-items:center}.download-btn{background:#dc2626;color:#fff;padding:5px 15px;border:none;border-radius:4px;cursor:pointer;text-decoration:none}.download-btn:hover{background:#b91c1c}.empty{color:#999;font-style:italic}</style></head><body><div class="container"><h1>📁 FD Printing - Files</h1><div id="content"></div></div><script>async function load(){const folders=${JSON.stringify(validFolders)};const el=document.getElementById('content');for(const f of folders){try{const r=await fetch('/files/'+f);const d=await r.json();const label=(f.startsWith('utrecht_')||f.startsWith('hoogvliet_'))?f.replaceAll('_',' ').toUpperCase():'COPY '+f.replace('copy','');let h='<div class="folder-section"><div class="folder-title">'+label+'</div>';if(d.files.length===0){h+='<p class="empty">No files</p>'}else{h+='<ul class="file-list">';d.files.forEach(file=>{h+='<li class="file-item"><span>'+file+'</span><a href="/download/'+f+'/'+file+'" class="download-btn">Download</a></li>'});h+='</ul>'}h+='</div>';el.innerHTML+=h}catch(e){el.innerHTML+='<p>Error: '+e.message+'</p>'}}}load()</script></body></html>`);
+  res.status(404).send('Deze pagina is niet meer openbaar. Open hem via de beheerpagina (Alle bestanden).');
+});
+
+app.get('/beheer/:key/bestanden', (req, res) => {
+  const access = accessForKey(req.params.key);
+  if (!access || access.role !== 'owner') return sendInvalidLink(res);
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.send(`<!DOCTYPE html><html><head><title>Alle bestanden</title><meta name="robots" content="noindex, nofollow"><style>body{font-family:Arial;margin:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;padding:20px;border-radius:8px}h1{color:#333}.folder-section{margin:20px 0;padding:15px;border:1px solid #ddd;border-radius:5px;background:#fafafa}.folder-title{font-weight:bold;font-size:18px;color:#dc2626;margin-bottom:10px}.file-list{list-style:none;padding:0}.file-item{padding:8px;margin:5px 0;background:#fff;border-left:3px solid #dc2626;display:flex;justify-content:space-between;align-items:center}.download-btn{background:#dc2626;color:#fff;padding:5px 15px;border:none;border-radius:4px;cursor:pointer;text-decoration:none}.download-btn:hover{background:#b91c1c}.empty{color:#999;font-style:italic}</style></head><body><div class="container"><h1>📁 FD Printing - Files</h1><div id="content"></div></div><script>async function load(){const folders=${JSON.stringify(validFolders)};const names=${JSON.stringify(Object.fromEntries(validFolders.map((f) => [f, stationLabel(f)])))};const el=document.getElementById('content');for(const f of folders){try{const r=await fetch('/files/'+f);const d=await r.json();const label=names[f]||f;let h='<div class="folder-section"><div class="folder-title">'+label+'</div>';if(d.files.length===0){h+='<p class="empty">No files</p>'}else{h+='<ul class="file-list">';d.files.forEach(file=>{h+='<li class="file-item"><span>'+file+'</span><a href="/download/'+f+'/'+file+'" class="download-btn">Download</a></li>'});h+='</ul>'}h+='</div>';el.innerHTML+=h}catch(e){el.innerHTML+='<p>Error: '+e.message+'</p>'}}}load()</script></body></html>`);
 });
 
 app.use((err, req, res, next) => {
@@ -1479,5 +1626,5 @@ app.use((err, req, res, next) => {
 
 app.listen(port, host, () => {
   console.log(`Server running on http://${host}:${port}`);
-  console.log(`Browser: http://${host}:${port}/browser`);
+  console.log('Alle bestanden: via de beheerlink /beheer/<sleutel>/bestanden');
 });

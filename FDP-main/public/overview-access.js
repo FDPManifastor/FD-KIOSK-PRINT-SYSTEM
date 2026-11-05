@@ -72,7 +72,12 @@
         + '<button type="button" class="fdp-links__btn fdp-links__btn--copy" data-copy="' + url + '">Kopieer link</button>'
         + '<a class="fdp-links__btn fdp-links__btn--open" href="' + loc.path + '" target="_blank" rel="noopener">Open</a>'
         + '</div>';
-    }).join('');
+    }).join('')
+    + '<div class="fdp-links__row">'
+    + '<span class="fdp-links__name">Bestanden</span>'
+    + '<span class="fdp-links__url">Alle geüploade bestanden van alle stations (alleen voor jou)</span>'
+    + '<a class="fdp-links__btn fdp-links__btn--open" href="/beheer/' + encodeURIComponent(access.key) + '/bestanden" target="_blank" rel="noopener">Open</a>'
+    + '</div>';
 
   const container = document.querySelector('main .max-w-6xl') || document.querySelector('main');
   if (container) container.insertBefore(box, container.firstChild);

@@ -1,0 +1,29 @@
+{
+  "_uitleg": "Eén plek voor alle stations. 'defaults' geldt voor elk station; een station kan elke instelling zelf overschrijven. Na een wijziging de server herstarten (Render doet dat bij elke deploy). Nieuw station: hier toevoegen, dan 'python3 tools/rollout_stations.py public' draaien.",
+  "defaults": {
+    "pricing": { "baseCents": 95, "baseMinutes": 10, "stepCents": 5, "stepMinutes": 1 },
+    "selfFinish": true,
+    "freeSession": true,
+    "idleCheck": false,
+    "idleMinutes": 10,
+    "idleCountdownSeconds": 60,
+    "sessionLog": false
+  },
+  "locations": {
+    "amsterdam": { "label": "Amsterdam" },
+    "utrecht": { "label": "Utrecht" },
+    "hoogvliet": { "label": "Hoogvliet" }
+  },
+  "stations": [
+    { "folder": "copy1", "label": "COPY 1", "name": "AMSTERDAM COPY 1", "location": "amsterdam" },
+    { "folder": "copy2", "label": "COPY 2", "name": "AMSTERDAM COPY 2", "location": "amsterdam" },
+    { "folder": "copy3", "label": "COPY 3", "name": "AMSTERDAM COPY 3", "location": "amsterdam" },
+    { "folder": "copy4", "label": "COPY 4", "name": "AMSTERDAM COPY 4", "location": "amsterdam" },
+    { "folder": "utrecht_copy1", "label": "UTRECHT COPY 1", "location": "utrecht" },
+    { "folder": "utrecht_copy2", "label": "UTRECHT COPY 2", "location": "utrecht" },
+    { "folder": "utrecht_copy3", "label": "UTRECHT COPY 3", "location": "utrecht" },
+    { "folder": "hoogvliet_copy1", "label": "HOOGVLIET COPY 1", "location": "hoogvliet" },
+    { "folder": "hoogvliet_copy2", "label": "HOOGVLIET COPY 2", "location": "hoogvliet" },
+    { "folder": "test_copy1", "label": "TEST COPY 1", "location": null, "test": true, "idleCheck": true, "sessionLog": true }
+  ]
+}

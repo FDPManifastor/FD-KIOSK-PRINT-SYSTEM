@@ -4,11 +4,10 @@ Gebruik:  python3 rollout.py <public-dir> [--check <orig_files_test> <orig_uploa
 """
 import re, sys, os
 
-STATIONS = {
-    "copy1": "COPY 1", "copy2": "COPY 2", "copy3": "COPY 3", "copy4": "COPY 4",
-    "utrecht_copy1": "UTRECHT COPY 1", "utrecht_copy2": "UTRECHT COPY 2", "utrecht_copy3": "UTRECHT COPY 3",
-    "hoogvliet_copy1": "HOOGVLIET COPY 1", "hoogvliet_copy2": "HOOGVLIET COPY 2",
-}
+import json
+_CONFIG = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "stations.json"), encoding="utf-8"))
+# Alle stations uit stations.json behalve de teststation (die is de bron).
+STATIONS = {st["folder"]: st["label"] for st in _CONFIG["stations"] if not st.get("test")}
 TEST_BADGE = re.compile(r'^  <div class="fixed top-3 right-3 z-50[^\n]*>TEST MODE</div>\n', re.M)
 
 
