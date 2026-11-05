@@ -118,13 +118,20 @@
      const cost = costCents(elapsed, station.pricing);
      let badge = '<span class="rounded-full bg-zinc-200 text-zinc-700 px-2.5 py-1 text-xs font-bold uppercase">Vrij</span>';
      let body = '<p class="text-sm text-zinc-500">Niet in gebruik.</p>';
-     let actions = '<button data-action="start" data-folder="' + station.folder + '" class="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Computer vrijgeven</button>';
+     const freeBtn = station.freeSessionAllowed
+      ? '<button data-action="start-free" data-folder="' + station.folder + '" class="rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold py-3">Vrije sessie</button>'
+      : '';
+     let actions = freeBtn
+      ? '<div class="grid grid-cols-2 gap-2"><button data-action="start" data-folder="' + station.folder + '" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Computer vrijgeven</button>' + freeBtn + '</div>'
+      : '<button data-action="start" data-folder="' + station.folder + '" class="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Computer vrijgeven</button>';
 
      if (station.status === 'active') {
-      badge = '<span class="rounded-full bg-emerald-600 text-white px-2.5 py-1 text-xs font-bold uppercase">In gebruik</span>';
+      badge = station.free
+       ? '<span class="rounded-full bg-blue-700 text-white px-2.5 py-1 text-xs font-bold uppercase">Vrije sessie</span>'
+       : '<span class="rounded-full bg-emerald-600 text-white px-2.5 py-1 text-xs font-bold uppercase">In gebruik</span>';
       body = '<div class="flex items-end justify-between"><div><p class="text-xs text-zinc-500">Gestart ' + clock(station.startedAt) + '</p>'
        + '<p class="tabular text-4xl font-extrabold" data-elapsed="' + station.folder + '">' + duration(elapsed) + '</p></div>'
-       + '<p class="tabular text-3xl font-extrabold text-red-700" data-cost="' + station.folder + '">' + euro(cost) + '</p></div>';
+       + '<p class="tabular text-3xl font-extrabold text-red-700" data-cost="' + station.folder + '">' + (station.free ? 'Vrij' : euro(cost)) + '</p></div>';
       actions = '<div class="grid grid-cols-2 gap-2">'
        + '<button data-action="pause" data-folder="' + station.folder + '" class="rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold py-3">Pauze</button>'
        + '<button data-action="stop" data-folder="' + station.folder + '" class="rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold py-3">Stoppen en afrekenen</button>'
@@ -141,7 +148,7 @@
      } else if (station.status === 'stopped') {
       badge = '<span class="rounded-full bg-amber-500 text-white px-2.5 py-1 text-xs font-bold uppercase">Afrekenen</span>';
       body = '<div class="rounded-xl bg-amber-50 border border-amber-200 p-4"><p class="text-xs font-semibold text-amber-900">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' (' + duration(elapsed) + ')</p>'
-       + '<p class="tabular text-4xl font-extrabold text-amber-900">' + euro(station.costCents) + '</p></div>';
+       + '<p class="tabular text-4xl font-extrabold text-amber-900">' + (station.free ? 'Vrije sessie' : euro(station.costCents)) + '</p></div>';
       actions = '<div class="grid grid-cols-2 gap-2">'
        + '<button data-action="reset" data-folder="' + station.folder + '" class="rounded-lg bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-3">Betaald, vrijmaken</button>'
        + '<button data-action="start" data-folder="' + station.folder + '" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Nieuwe klant</button>'
@@ -168,7 +175,7 @@
       const elapsedEl = stationsBox.querySelector('[data-elapsed="' + station.folder + '"]');
       const costEl = stationsBox.querySelector('[data-cost="' + station.folder + '"]');
       if (elapsedEl) elapsedEl.textContent = duration(elapsed);
-      if (costEl) costEl.textContent = euro(costCents(elapsed, station.pricing));
+      if (costEl) costEl.textContent = station.free ? 'Vrij' : euro(costCents(elapsed, station.pricing));
      });
     }
 
@@ -187,7 +194,7 @@
     async function act(action, folder) {
      if (action === 'stop' && !window.confirm('Sessie stoppen en afrekenen?')) return;
      try {
-      await api('/backoffice/api/stations/' + encodeURIComponent(folder) + '/' + action, 'POST');
+      await api('/backoffice/api/stations/' + encodeURIComponent(folder) + '/' + (action === 'start-free' ? 'start?mode=free' : action), 'POST');
       showError('');
      } catch (error) {
       if (error.message !== 'unauthorized') showError(error.message);

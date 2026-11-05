@@ -1,7 +1,8 @@
 // Sessie-functies voor de klant op het kioskscherm (nu alleen TEST COPY 1):
 // - Knop "Ik ben klaar": tijd stopt en de kiosk gaat op slot (afrekenen bij de balie)
-// - Waarschuwing 1 minuut voor het einde van de eerste 10 minuten: popup die
-//   vanuit het tijdblokje naar voren komt, 15 seconden, weg te tikken
+// - Tariefmelding bij de start van de sessie en een waarschuwing 1 minuut voor het
+//   einde van de eerste 10 minuten: popup die vanuit het tijdblokje naar voren komt,
+//   15 seconden, weg te tikken. Bij een vrije sessie: melding 'geen tijdslimiet'.
 // - Prijsregel "daarna ... per minuut" in de prijslijst
 // Alleen actief als de server voor dit station selfFinish aangeeft.
 // Laden NA station-timer.js en kiosk-lock.js.
@@ -13,6 +14,7 @@
 
   const WARN_BEFORE_MS = 60 * 1000;
   const WARN_VISIBLE_MS = 15 * 1000;
+  const START_WINDOW_MS = 2 * 60 * 1000; // tariefmelding alleen in de eerste 2 minuten
   const ease = 'cubic-bezier(.16,1,.3,1)';
   const spring = 'cubic-bezier(.34,1.56,.64,1)';
 
@@ -29,6 +31,12 @@
       warnText: 'Vanaf {base} minuten betaal je {price} {unit}.',
       warnLeft: 'Nog {left}',
       warnClose: 'Tik om te sluiten',
+      startEyebrow: 'Tarief computergebruik',
+      startTitle: 'Eerste {base} minuten: {basePrice}',
+      startText: 'Daarna betaal je {price} {unit}. Klaar? Tik rechtsonder op Ik ben klaar.',
+      freeEyebrow: 'Vrije sessie',
+      freeTitle: 'Geen tijdslimiet',
+      freeText: 'Je gebruikt deze computer zonder kosten voor computergebruik. Printen wordt apart gerekend.',
       perMinute: 'per minuut',
       perMinutes: 'per {n} minuten',
       priceRowTitle: 'Computergebruik',
@@ -46,6 +54,12 @@
       warnText: 'From {base} minutes you pay {price} {unit}.',
       warnLeft: '{left} left',
       warnClose: 'Tap to close',
+      startEyebrow: 'Computer use rate',
+      startTitle: 'First {base} minutes: {basePrice}',
+      startText: 'After that you pay {price} {unit}. Done? Tap I\'m done at the bottom right.',
+      freeEyebrow: 'Free session',
+      freeTitle: 'No time limit',
+      freeText: 'You can use this computer without charge for computer use. Printing is charged separately.',
       perMinute: 'per minute',
       perMinutes: 'per {n} minutes',
       priceRowTitle: 'Computer use',
@@ -129,6 +143,12 @@
     '@keyframes fdpWarnBar{to{transform:scaleX(0)}}',
     // het tijdblokje geeft even een oranje gloed
     '.fdp-station-timer.fdp-timer-warn{box-shadow:0 0 0 3px #f59e0b,0 20px 50px rgba(245,158,11,.45)}',
+    '.fdp-warn--info{border-color:#2563eb}.fdp-warn--info::after{border-color:#2563eb}',
+    '.fdp-warn--info .fdp-warn__icon{background:#2563eb;animation-name:fdpInfoPulse}',
+    '@keyframes fdpInfoPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.5)}50%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}',
+    '.fdp-warn--info .fdp-warn__eyebrow{color:#1d4ed8}.fdp-warn--info .fdp-warn__meta{color:#1d4ed8}',
+    '.fdp-warn--info .fdp-warn__bar{background:#dbeafe}.fdp-warn--info .fdp-warn__bar span{background:#2563eb}',
+    '.fdp-station-timer.fdp-timer-info{box-shadow:0 0 0 3px #3b82f6,0 20px 50px rgba(37,99,235,.45)}',
     '@media (prefers-reduced-motion:reduce){.fdp-warn,.fdp-done,.fdp-finish__card{transition:opacity .2s}.fdp-warn__icon{animation:none}}'
   ].join('');
   document.head.appendChild(style);
@@ -221,33 +241,44 @@
   let warnTimer = null;
   let warnTick = null;
 
-  function warnKey(st) { return 'fdp-warned-' + folder + '-' + st.startedAt; }
-  function alreadyWarned(st) {
-    if (warnedFor === st.startedAt) return true;
-    try { return sessionStorage.getItem(warnKey(st)) === '1'; } catch (error) { return false; }
+  const shown = {};
+  function warnKey(st, kind) { return 'fdp-warned-' + folder + '-' + st.startedAt + '-' + kind; }
+  function alreadyWarned(st, kind) {
+    if (shown[warnKey(st, kind)]) return true;
+    try { return sessionStorage.getItem(warnKey(st, kind)) === '1'; } catch (error) { return false; }
   }
-  function markWarned(st) {
-    warnedFor = st.startedAt;
-    try { sessionStorage.setItem(warnKey(st), '1'); } catch (error) { /* ignore */ }
+  function markWarned(st, kind) {
+    shown[warnKey(st, kind)] = true;
+    try { sessionStorage.setItem(warnKey(st, kind), '1'); } catch (error) { /* ignore */ }
   }
+  let currentKind = 'warn';
 
-  function renderWarn(st) {
+  // kind: 'warn' (bijna 10 minuten), 'start' (tarief bij de start) of 'free' (vrije sessie)
+  function renderWarn(st, kind) {
     const p = st.pricing;
     const left = p.baseMinutes * 60000 - timer.getElapsedMs();
+    const vars = { base: p.baseMinutes, basePrice: euro(p.baseCents), price: euro(p.stepCents), unit: unitText(p) };
+    const prefix = kind === 'warn' ? 'warn' : kind;
+    const meta = kind === 'warn'
+      ? '<span data-left>' + t('warnLeft', { left: mmss(left) }) + '</span><span>' + t('warnClose') + '</span>'
+      : '<span></span><span>' + t('warnClose') + '</span>';
+    warn.className = 'fdp-warn' + (kind === 'warn' ? '' : ' fdp-warn--info');
     warn.innerHTML = '<div class="fdp-warn__row"><div class="fdp-warn__icon">' + clockIcon + '</div><div>'
-      + '<p class="fdp-warn__eyebrow">' + t('warnEyebrow') + '</p>'
-      + '<p class="fdp-warn__title">' + t('warnTitle', { base: p.baseMinutes }) + '</p>'
-      + '<p class="fdp-warn__text">' + t('warnText', { base: p.baseMinutes, price: euro(p.stepCents), unit: unitText(p) }) + '</p>'
-      + '<div class="fdp-warn__meta"><span data-left>' + t('warnLeft', { left: mmss(left) }) + '</span><span>' + t('warnClose') + '</span></div>'
+      + '<p class="fdp-warn__eyebrow">' + t(prefix + 'Eyebrow') + '</p>'
+      + '<p class="fdp-warn__title">' + t(prefix + 'Title', vars) + '</p>'
+      + '<p class="fdp-warn__text">' + t(prefix + 'Text', vars) + '</p>'
+      + '<div class="fdp-warn__meta">' + meta + '</div>'
       + '</div></div><div class="fdp-warn__bar"><span></span></div>';
   }
 
-  function showWarn(st) {
-    markWarned(st);
-    renderWarn(st);
+  function showWarn(st, kind) {
+    kind = kind || 'warn';
+    currentKind = kind;
+    markWarned(st, kind);
+    renderWarn(st, kind);
     placeAboveTimer(warn, 18);
     const box = timer.getBox && timer.getBox();
-    if (box) box.classList.add('fdp-timer-warn');
+    if (box) box.classList.add(kind === 'warn' ? 'fdp-timer-warn' : 'fdp-timer-info');
     doneButton.style.visibility = 'hidden'; // de waarschuwing komt op die plek
     warn.classList.remove('is-closing');
     void warn.offsetWidth;
@@ -269,7 +300,7 @@
     warn.classList.add('is-closing');
     warn.classList.remove('is-open');
     const box = timer.getBox && timer.getBox();
-    if (box) box.classList.remove('fdp-timer-warn');
+    if (box) box.classList.remove('fdp-timer-warn', 'fdp-timer-info');
     setTimeout(function () { warn.classList.remove('is-closing'); doneButton.style.visibility = ''; }, 380);
   }
 
@@ -279,16 +310,29 @@
     const st = station();
     if (!st || !st.selfFinish || st.status !== 'active' || !st.pricing) return;
     if (document.body.classList.contains('fdp-kiosk-locked')) return;
+    if (document.body.classList.contains('fdp-choosing-language')) return; // eerst de taalkeuze
     const baseMs = st.pricing.baseMinutes * 60000;
     const elapsed = timer.getElapsedMs();
-    if (elapsed >= baseMs - WARN_BEFORE_MS && elapsed < baseMs && !alreadyWarned(st)) showWarn(st);
+    const warnDue = !st.free && elapsed >= baseMs - WARN_BEFORE_MS && elapsed < baseMs && !alreadyWarned(st, 'warn');
+    // Een openstaande tariefmelding maakt direct plaats voor de waarschuwing.
+    if (warn.classList.contains('is-open')) {
+      if (warnDue && currentKind !== 'warn') showWarn(st, 'warn');
+      return;
+    }
+    if (st.free) {
+      if (!alreadyWarned(st, 'free')) showWarn(st, 'free');
+      return;
+    }
+    // Bij de start: tarief laten zien (zolang de waarschuwing nog niet aan de beurt is).
+    if (elapsed < Math.min(START_WINDOW_MS, baseMs - WARN_BEFORE_MS) && !alreadyWarned(st, 'start')) { showWarn(st, 'start'); return; }
+    if (warnDue) showWarn(st, 'warn');
   }
 
   // --------------------------------------------- prijsregel in prijslijst
   function updatePriceRow() {
     const st = station();
     const first = document.getElementById('prijzen-startup-row-1');
-    if (!st || !st.selfFinish || !st.pricing || !first) return;
+    if (!st || !st.pricing || !first) return; // anders blijft de vaste regel uit de pagina staan
     const p = st.pricing;
     let row = document.getElementById('prijzen-startup-row-time');
     if (!row) {

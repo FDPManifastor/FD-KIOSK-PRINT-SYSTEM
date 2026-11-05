@@ -17,6 +17,11 @@
       total: 'Totaal',
       paused: 'Gepauzeerd',
       pausedText: 'De tijd staat stil',
+      freeLabel: 'Vrije sessie',
+      freeCost: 'Vrij',
+      freeText: 'Geen tijdslimiet',
+      freeScope: 'Computergebruik zonder kosten · printen wordt apart gerekend',
+      freeEndedText: 'Vraag een medewerker om opnieuw te beginnen',
       scope: 'Opstartkosten + computergebruik · excl. printen'
     },
     en: {
@@ -28,6 +33,11 @@
       total: 'Total',
       paused: 'Paused',
       pausedText: 'The clock is stopped',
+      freeLabel: 'Free session',
+      freeCost: 'Free',
+      freeText: 'No time limit',
+      freeScope: 'Computer use free of charge · printing is charged separately',
+      freeEndedText: 'Ask a staff member to start again',
       scope: 'Start-up fee + computer use · excl. printing'
     }
   };
@@ -88,6 +98,8 @@
     '.fdp-station-timer--ended{background:rgba(185,28,28,.96)}',
     '.fdp-station-timer--ended .fdp-station-timer__cost{color:#fff}',
     '.fdp-station-timer--paused{background:rgba(180,83,9,.95)}',
+    '.fdp-station-timer--free{background:rgba(30,64,175,.95)}',
+    '.fdp-station-timer--free .fdp-station-timer__cost{color:#bfdbfe}',
     '.fdp-station-timer--paused .fdp-station-timer__cost{color:#fff}',
     '.fdp-station-timer__dot{display:inline-block;width:.5rem;height:.5rem;border-radius:999px;background:#34d399;margin-right:.4rem;',
     'animation:fdpTimerPulse 1.6s ease-in-out infinite}',
@@ -118,10 +130,10 @@
         + '<div><p class="fdp-station-timer__label">' + t('endedTitle') + '</p>'
         + '<p class="fdp-station-timer__time">' + duration(station.elapsedMs) + '</p></div>'
         + '<div><p class="fdp-station-timer__label" style="text-align:right">' + t('total') + '</p>'
-        + '<p class="fdp-station-timer__cost">' + euro(station.costCents) + '</p></div>'
+        + '<p class="fdp-station-timer__cost">' + (station.free ? t('freeCost') : euro(station.costCents)) + '</p></div>'
         + '</div>'
-        + '<p class="fdp-station-timer__next" style="color:#fff">' + t('endedText') + '</p>'
-        + '<p class="fdp-station-timer__scope">' + t('scope') + '</p>';
+        + '<p class="fdp-station-timer__next" style="color:#fff">' + (station.free ? t('freeEndedText') : t('endedText')) + '</p>'
+        + '<p class="fdp-station-timer__scope">' + (station.free ? t('freeScope') : t('scope')) + '</p>';
       return;
     }
 
@@ -129,25 +141,28 @@
     const paused = station.status === 'paused';
     const elapsed = station.elapsedMs + (paused ? 0 : Math.max(0, Date.now() + clockOffset - station.serverNow));
     const price = pricingFor(elapsed);
-    const layoutKey = station.status + '-' + lang();
+    const free = !!station.free;
+    const layoutKey = station.status + '-' + lang() + (free ? '-free' : '');
 
     if (box.dataset.layout !== layoutKey) {
       box.dataset.layout = layoutKey;
-      box.className = 'fdp-station-timer' + (paused ? ' fdp-station-timer--paused' : '');
+      box.className = 'fdp-station-timer' + (paused ? ' fdp-station-timer--paused' : '') + (free ? ' fdp-station-timer--free' : '');
       box.innerHTML = '<div class="fdp-station-timer__row">'
-        + '<div><p class="fdp-station-timer__label">' + (paused ? '&#10073;&#10073; ' + t('paused') : '<span class="fdp-station-timer__dot"></span>' + t('label')) + '</p>'
+        + '<div><p class="fdp-station-timer__label">' + (paused ? '&#10073;&#10073; ' + t('paused') : '<span class="fdp-station-timer__dot"></span>' + (free ? t('freeLabel') : t('label'))) + '</p>'
         + '<p class="fdp-station-timer__time" data-part="time"></p></div>'
         + '<div><p class="fdp-station-timer__label" style="text-align:right">' + t('cost') + '</p>'
         + '<p class="fdp-station-timer__cost" data-part="cost"></p></div>'
         + '</div>'
         + (paused
           ? '<p class="fdp-station-timer__next">' + t('pausedText') + '<span data-part="next" hidden></span></p>'
-          : '<p class="fdp-station-timer__next">' + t('next').replace('{price}', euro(station.pricing.stepCents)) + ' <span data-part="next"></span></p>')
-        + '<p class="fdp-station-timer__scope">' + t('scope') + '</p>';
+          : (free
+            ? '<p class="fdp-station-timer__next">' + t('freeText') + '<span data-part="next" hidden></span></p>'
+            : '<p class="fdp-station-timer__next">' + t('next').replace('{price}', euro(station.pricing.stepCents)) + ' <span data-part="next"></span></p>'))
+        + '<p class="fdp-station-timer__scope">' + (free ? t('freeScope') : t('scope')) + '</p>';
     }
 
     box.querySelector('[data-part="time"]').textContent = duration(elapsed);
-    box.querySelector('[data-part="cost"]').textContent = euro(price.costCents);
+    box.querySelector('[data-part="cost"]').textContent = free ? t('freeCost') : euro(price.costCents);
     box.querySelector('[data-part="next"]').textContent = duration(price.msUntilNext);
   }
 

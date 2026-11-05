@@ -19,6 +19,7 @@
       lockedText: 'Vraag een van onze medewerkers om computer {computer} voor je te activeren. Hieronder zie je alvast onze prijzen.',
       endedTitle: 'Je sessie is afgelopen',
       endedText: 'Betaal bij de balie en noem computer {computer}. Wil je de computer opnieuw gebruiken? Vraag een van onze medewerkers.',
+      endedFreeText: 'Je vrije sessie op computer {computer} is afgelopen. Wil je de computer opnieuw gebruiken? Vraag een van onze medewerkers.',
       due: 'Te betalen',
       dueScope: 'Opstartkosten + computergebruik, excl. printen',
       computer: 'Computer'
@@ -28,6 +29,7 @@
       lockedText: 'Please ask one of our staff members to activate computer {computer} for you. Our prices are shown below.',
       endedTitle: 'Your session has ended',
       endedText: 'Please pay at the counter and mention computer {computer}. Want to use the computer again? Ask one of our staff members.',
+      endedFreeText: 'Your free session on computer {computer} has ended. Want to use the computer again? Ask one of our staff members.',
       due: 'Amount due',
       dueScope: 'Start-up fee + computer use, excl. printing',
       computer: 'Computer'
@@ -77,16 +79,17 @@
 
   function renderBanner(station) {
     const ended = station.status === 'stopped';
-    const key = station.status + '-' + (station.costCents || 0) + '-' + lang();
+    const free = ended && !!station.free;
+    const key = station.status + '-' + (station.costCents || 0) + '-' + lang() + (free ? '-free' : '');
     if (key === bannerKey) return;
     bannerKey = key;
     const t = texts[lang()];
     banner.innerHTML = '<div class="fdp-lock-banner__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">'
       + '<rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round"></path></svg></div>'
       + '<div><p class="fdp-lock-banner__title">' + (ended ? t.endedTitle : t.lockedTitle) + '</p>'
-      + '<p class="fdp-lock-banner__text">' + (ended ? t.endedText : t.lockedText).replace('{computer}', '<strong>' + computerLabel + '</strong>') + '</p></div>'
+      + '<p class="fdp-lock-banner__text">' + (free ? t.endedFreeText : (ended ? t.endedText : t.lockedText)).replace('{computer}', '<strong>' + computerLabel + '</strong>') + '</p></div>'
       + (computerLabel ? '<div class="fdp-lock-banner__pc"><small>' + t.computer + '</small><strong>' + computerLabel + '</strong></div>' : '')
-      + (ended ? '<div class="fdp-lock-banner__due"><small>' + t.due + '</small><strong>' + euro(station.costCents) + '</strong><em>' + t.dueScope + '</em></div>' : '');
+      + (ended && !free ? '<div class="fdp-lock-banner__due"><small>' + t.due + '</small><strong>' + euro(station.costCents) + '</strong><em>' + t.dueScope + '</em></div>' : '');
   }
 
   function lock(station) {

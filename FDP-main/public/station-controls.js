@@ -36,6 +36,9 @@
     '.st-pause{background:#f59e0b}.st-pause:hover{background:#d97706}',
     '.st-off{background:#dc2626}.st-off:hover{background:#b91c1c}',
     '.st-clear{background:#374151}.st-clear:hover{background:#1f2937}',
+    '.st-free{background:#1d4ed8}.st-free:hover{background:#1e40af}',
+    '.st-panel--free{border-color:#1d4ed8;background:#eff6ff}',
+    '.st-panel--free .st-badge{background:#1d4ed8}',
     '.st-dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:#fff;margin-right:.3rem;vertical-align:middle;',
     'animation:stPulse 1.4s ease-in-out infinite}',
     '@keyframes stPulse{0%,100%{opacity:1}50%{opacity:.25}}',
@@ -113,7 +116,12 @@
       return { cls: 'st-panel st-panel--disabled', html: 'Timer nog niet ingeschakeld' };
     }
 
-    const label = { idle: 'Uit', active: 'Aan', paused: 'Pauze', stopped: 'Afrekenen' }[station.status] || station.status;
+    const free = !!station.free;
+    let label = { idle: 'Uit', active: 'Aan', paused: 'Pauze', stopped: 'Afrekenen' }[station.status] || station.status;
+    if (free && station.status === 'active') label = 'Vrij';
+    if (free && station.status === 'stopped') label = 'Klaar';
+    // Knop voor een vrije sessie (geen tijdslimiet, geen kosten), alleen waar de server dat toestaat.
+    const freeBtn = station.freeSessionAllowed ? button('start-free', folder, 'st-free', 'Vrije sessie') : '';
     const head = '<div class="st-head"><span>Tijd · excl. printen</span><span class="st-badge">'
       + (station.status === 'active' ? '<span class="st-dot"></span>' : '') + label + '</span></div>';
 
@@ -121,7 +129,7 @@
       return {
         cls: 'st-panel',
         html: head + '<p class="st-sub" style="margin:.4rem 0 .55rem">Computer is niet vrijgegeven.</p>'
-          + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + '</div>'
+          + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + freeBtn + '</div>'
       };
     }
 
@@ -130,8 +138,9 @@
     if (station.status === 'stopped') {
       return {
         cls: 'st-panel st-panel--stopped',
-        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + ' · te betalen' + (station.stoppedBy === 'customer' ? ' · klant heeft afgerond' : '') + '</p><p class="st-sub" style="margin-top:-.4rem">Alleen tijd · excl. printen</p>'
-          + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + button('reset', folder, 'st-clear', 'Betaald') + '</div>'
+        html: head + nums + '<p class="st-sub">' + clock(station.startedAt) + ' - ' + clock(station.stoppedAt) + (free ? ' · vrije sessie' : ' · te betalen') + (station.stoppedBy === 'customer' ? ' · klant heeft afgerond' : '') + '</p>'
+          + (free ? '' : '<p class="st-sub" style="margin-top:-.4rem">Alleen tijd · excl. printen</p>')
+          + '<div class="st-actions">' + button('start', folder, 'st-on', 'Aan') + freeBtn + button('reset', folder, 'st-clear', free ? 'Vrijmaken' : 'Betaald') + '</div>'
       };
     }
 
@@ -144,8 +153,8 @@
     }
 
     return {
-      cls: 'st-panel st-panel--active',
-      html: head + nums + '<p class="st-sub">Open sinds ' + clock(station.startedAt) + '</p>'
+      cls: 'st-panel st-panel--active' + (free ? ' st-panel--free' : ''),
+      html: head + nums + '<p class="st-sub">' + (free ? 'Vrije sessie · ' : '') + 'Open sinds ' + clock(station.startedAt) + '</p>'
         + '<div class="st-actions">' + button('pause', folder, 'st-pause', 'Pauze') + button('stop', folder, 'st-off', 'Uit') + '</div>'
     };
   }
@@ -156,7 +165,7 @@
 
     panels.forEach(function (panel, folder) {
       const station = stations.get(folder);
-      const layoutKey = station ? station.status + '-' + station.startedAt + '-' + (station.pausedAt || '') : 'disabled';
+      const layoutKey = station ? station.status + '-' + station.startedAt + '-' + (station.pausedAt || '') + (station.free ? '-free' : '') : 'disabled';
       if (panel.layout !== layoutKey) {
         const layout = layoutFor(folder, station);
         panel.el.className = layout.cls;
@@ -173,7 +182,7 @@
     const timeEl = panel.el.querySelector('[data-st-time]');
     const costEl = panel.el.querySelector('[data-st-cost]');
     if (timeEl) timeEl.textContent = duration(elapsed);
-    if (costEl) costEl.textContent = euro(station.status === 'stopped' ? station.costCents : costCents(elapsed, station.pricing));
+    if (costEl) costEl.textContent = station.free ? 'Vrij' : euro(station.status === 'stopped' ? station.costCents : costCents(elapsed, station.pricing));
   }
 
   // De sleutel komt uit de link van de locatie of de beheerlink (window.FDPAccess).
@@ -203,7 +212,8 @@
   async function act(action, folder) {
     if (action === 'stop' && !window.confirm('Sessie stoppen? Het bedrag staat dan vast om af te rekenen.')) return;
     try {
-      await api('/backoffice/api/stations/' + encodeURIComponent(folder) + '/' + action, 'POST');
+      const path = action === 'start-free' ? 'start?mode=free' : action;
+      await api('/backoffice/api/stations/' + encodeURIComponent(folder) + '/' + path, 'POST');
       loadError = '';
     } catch (error) {
       loadError = error.message;

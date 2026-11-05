@@ -1041,6 +1041,8 @@ function pricingFor(folder) {
 }
 // Stations waar de klant zelf op "Ik ben klaar" kan drukken (stopt de tijd).
 const selfFinishFolders = ['test_copy1'];
+// Stations waar het personeel een vrije sessie kan starten (geen tijdslimiet, geen kosten).
+const freeSessionFolders = ['test_copy1'];
 const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','))
   .split(',')
   .map((folder) => folder.trim())
@@ -1088,7 +1090,7 @@ function saveStationSessions() {
 function describeStation(folder) {
   const session = stationSessions.get(folder) || null;
   const now = Date.now();
-  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder) };
+  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder), freeSessionAllowed: freeSessionFolders.includes(folder) };
 
   if (!session) return { ...base, status: 'idle' };
 
@@ -1104,7 +1106,8 @@ function describeStation(folder) {
     stoppedAt: session.stoppedAt || null,
     pausedAt: session.pausedAt || null,
     elapsedMs,
-    costCents: calculateStationCostCents(elapsedMs, pricingFor(folder)),
+    free: !!session.free,
+    costCents: session.free ? 0 : calculateStationCostCents(elapsedMs, pricingFor(folder)),
     stoppedBy: session.stoppedBy || null
   };
 }
@@ -1345,11 +1348,17 @@ app.post('/backoffice/api/stations/:folder/start', (req, res) => {
     return res.status(409).json({ error: 'Deze computer is al vrijgegeven.', station: describeStation(folder) });
   }
 
+  // ?mode=free: vrije sessie zonder tijdslimiet en zonder kosten (alleen waar toegestaan).
+  const free = req.query && req.query.mode === 'free';
+  if (free && !freeSessionFolders.includes(folder)) {
+    return res.status(403).json({ error: 'Vrije sessie is voor dit station nog niet beschikbaar.', station: describeStation(folder) });
+  }
+
   // Privacy: begin elke klant met een lege map, zonder bestanden van de vorige klant.
   clearFolderFiles(folder);
-  stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null, pausedAt: null, pausedTotalMs: 0 });
+  stationSessions.set(folder, { startedAt: Date.now(), stoppedAt: null, pausedAt: null, pausedTotalMs: 0, free: !!free });
   saveStationSessions();
-  console.log(`Station ${folder} vrijgegeven.`);
+  console.log(`Station ${folder} vrijgegeven${free ? ' (vrije sessie)' : ''}.`);
   return res.json({ ok: true, station: describeStation(folder) });
 });
 
