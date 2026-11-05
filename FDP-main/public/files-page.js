@@ -1315,12 +1315,16 @@
     await baseNewSession({ skipConfirm: true });
   }
 
-  const sessionTimeoutApi = window.createSessionTimeoutController({
-    translate: t,
-    restartSession: restartSessionFromTimeout,
-    minimumMs: 5 * 60 * 1000,
-    responseMs: 60 * 1000
-  });
+  // sessionTimeout: false in de paginaconfig zet het venster "Ben je klaar met je
+  // sessie?" (automatisch herstarten na een paar minuten) uit.
+  const sessionTimeoutApi = config.sessionTimeout === false
+    ? { start: function () {}, refresh: function () {}, restartTimer: function () {}, wrapRestart: function (fn) { return fn; } }
+    : window.createSessionTimeoutController({
+      translate: t,
+      restartSession: restartSessionFromTimeout,
+      minimumMs: 5 * 60 * 1000,
+      responseMs: 60 * 1000
+    });
 
   newSession = sessionTimeoutApi.wrapRestart(baseNewSession);
   window.showPreview = showPreview;
