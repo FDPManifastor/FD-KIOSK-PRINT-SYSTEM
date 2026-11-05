@@ -1020,29 +1020,27 @@ app.delete('/delete-all/:folder', (req, res) => {
 //
 // De backoffice start per station een sessie; het kioskscherm toont dan de
 // verstreken tijd en de kosten rechtsonder. Tarief: EUR 0,95 voor de eerste
-// 10 minuten, daarna EUR 0,95 per begonnen 5 minuten. Per station kan een
+// 10 minuten, daarna EUR 0,05 per begonnen minuut. Per station kan een
 // ander tarief gelden (stationPricingOverrides), bijv. om op de test te proberen.
 // Welke stations meedoen staat in STATION_TIMER_FOLDERS (komma-gescheiden),
 // standaard alle stations.
 // ---------------------------------------------------------------------------
+// Tarief: EUR 0,95 voor de eerste 10 minuten, daarna EUR 0,05 per begonnen minuut.
 const stationPricing = {
   baseCents: 95,
   baseMinutes: 10,
-  stepCents: 95,
-  stepMinutes: 5
+  stepCents: 5,
+  stepMinutes: 1
 };
-// Afwijkend tarief per station: eerst op de teststation proberen.
-// Teststation: EUR 0,95 voor de eerste 10 minuten, daarna EUR 0,05 per begonnen minuut.
-const stationPricingOverrides = {
-  test_copy1: { baseCents: 95, baseMinutes: 10, stepCents: 5, stepMinutes: 1 }
-};
+// Afwijkend tarief per station (bijv. om eerst op de teststation te proberen).
+const stationPricingOverrides = {};
 function pricingFor(folder) {
   return stationPricingOverrides[folder] || stationPricing;
 }
 // Stations waar de klant zelf op "Ik ben klaar" kan drukken (stopt de tijd).
-const selfFinishFolders = ['test_copy1'];
+const selfFinishFolders = validFolders.slice();
 // Stations waar het personeel een vrije sessie kan starten (geen tijdslimiet, geen kosten).
-const freeSessionFolders = ['test_copy1'];
+const freeSessionFolders = validFolders.slice();
 const timerFolders = (process.env.STATION_TIMER_FOLDERS || validFolders.join(','))
   .split(',')
   .map((folder) => folder.trim())

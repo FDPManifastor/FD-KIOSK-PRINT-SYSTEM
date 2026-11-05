@@ -584,6 +584,10 @@
          <td class="prijs">€ 0,95</td>
         </tr>
         <tr>
+           <td id="prijzen-startup-row-time"><strong>Computergebruik</strong><br><small>na de eerste 10 min.</small></td>
+         <td class="prijs" id="prijzen-startup-row-time-price">€ 0,05 / minuut</td>
+        </tr>
+        <tr>
            <td id="prijzen-startup-row-2"><strong>Opstart kosten</strong><br><small>hulp van personeel</small></td>
          <td class="prijs">€ 2,50</td>
         </tr>
@@ -808,7 +812,8 @@
     folderName: 'hoogvliet_copy2',
     uploadPath: '/upload_hoogvliet_copy2.html',
     copyLabel: 'HOOGVLIET COPY 2',
-    startupMinutes: 10
+    startupMinutes: 10,
+    sessionTimeout: false
    };
   </script>
   <script src="/files-page.js"></script>
@@ -1328,5 +1333,6 @@
   <script src="/kiosk-language.js"></script>
   <script src="/kiosk-icons.js"></script>
   <script src="/kiosk-impose.js"></script>
+  <script src="/kiosk-session.js"></script>
  </body>
 </html>
