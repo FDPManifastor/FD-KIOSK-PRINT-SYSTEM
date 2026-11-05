@@ -1090,7 +1090,7 @@ function saveStationSessions() {
 function describeStation(folder) {
   const session = stationSessions.get(folder) || null;
   const now = Date.now();
-  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder), freeSessionAllowed: freeSessionFolders.includes(folder), idleCheck: idleCheckFor(folder) };
+  const base = { folder, label: stationLabel(folder), serverNow: now, pricing: pricingFor(folder), selfFinish: selfFinishFolders.includes(folder), freeSessionAllowed: freeSessionFolders.includes(folder), idleCheck: idleCheckFor(folder), finishAlert: !!(stationSetting(folder) && stationSetting(folder).finishAlert) };
 
   if (!session) return { ...base, status: 'idle' };
 

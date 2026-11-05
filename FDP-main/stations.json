@@ -7,7 +7,8 @@
     "idleCheck": true,
     "idleMinutes": 10,
     "idleCountdownSeconds": 60,
-    "sessionLog": true
+    "sessionLog": true,
+    "finishAlert": false
   },
   "locations": {
     "amsterdam": { "label": "Amsterdam" },
@@ -24,6 +25,6 @@
     { "folder": "utrecht_copy3", "label": "UTRECHT COPY 3", "location": "utrecht" },
     { "folder": "hoogvliet_copy1", "label": "HOOGVLIET COPY 1", "location": "hoogvliet" },
     { "folder": "hoogvliet_copy2", "label": "HOOGVLIET COPY 2", "location": "hoogvliet" },
-    { "folder": "test_copy1", "label": "TEST COPY 1", "location": null, "test": true }
+    { "folder": "test_copy1", "label": "TEST COPY 1", "location": null, "test": true, "finishAlert": true }
   ]
 }
