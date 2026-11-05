@@ -1,5 +1,5 @@
 // Sessie-functies voor de klant op het kioskscherm (nu alleen TEST COPY 1):
-// - Knop "Ik ben klaar": tijd stopt en de kiosk gaat op slot (afrekenen bij de balie)
+// - Knop "Ik ben klaar": één tik, tijd stopt en de kiosk gaat op slot (afrekenen bij de balie)
 // - Waarschuwing 1 minuut voor het einde van de eerste 10 minuten: popup die
 //   vanuit het tijdblokje naar voren komt, 15 seconden, weg te tikken
 // - Prijsregel "daarna ... per minuut" in de prijslijst
@@ -19,11 +19,7 @@
   const texts = {
     nl: {
       done: 'Ik ben klaar',
-      confirmTitle: 'Klaar met printen?',
-      confirmText: 'De tijd stopt en deze computer gaat op slot. Je rekent af bij de balie.',
-      confirmYes: 'Ja, ik ben klaar',
-      confirmNo: 'Nee, ik ga verder',
-      failed: 'Dat lukte niet. Probeer het opnieuw of vraag een medewerker.',
+      failed: 'Niet gelukt, probeer opnieuw',
       warnEyebrow: 'Let op',
       warnTitle: 'Je eerste {base} minuten zijn bijna voorbij',
       warnText: 'Vanaf {base} minuten betaal je {price} {unit}.',
@@ -36,11 +32,7 @@
     },
     en: {
       done: "I'm done",
-      confirmTitle: 'Done printing?',
-      confirmText: 'The clock stops and this computer locks. Please pay at the counter.',
-      confirmYes: "Yes, I'm done",
-      confirmNo: 'No, continue',
-      failed: 'That did not work. Please try again or ask a staff member.',
+      failed: 'Failed, please try again',
       warnEyebrow: 'Heads up',
       warnTitle: 'Your first {base} minutes are almost over',
       warnText: 'From {base} minutes you pay {price} {unit}.',
@@ -86,25 +78,6 @@
     '.fdp-done svg{width:26px;height:26px}',
     'body.fdp-kiosk-locked .fdp-done{display:none}',
 
-    // Bevestiging
-    '.fdp-finish{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;',
-    'background:rgba(15,15,15,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s ease}',
-    '.fdp-finish.is-open{opacity:1}',
-    '.fdp-finish__card{width:min(32rem,100%);background:#fff;border-radius:1.6rem;padding:2rem 1.75rem 1.5rem;text-align:center;',
-    'font-family:Manrope,system-ui,sans-serif;box-shadow:0 30px 80px rgba(0,0,0,.3);transform:translateY(24px) scale(.94);transition:transform .45s ' + spring + '}',
-    '.fdp-finish.is-open .fdp-finish__card{transform:none}',
-    '.fdp-finish__icon{width:4rem;height:4rem;margin:0 auto 1rem;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#dcfce7;color:#16a34a}',
-    '.fdp-finish__icon svg{width:2rem;height:2rem}',
-    '.fdp-finish__title{margin:0;font-size:1.6rem;font-weight:800;color:#18181b}',
-    '.fdp-finish__text{margin:.6rem 0 0;font-size:1.05rem;line-height:1.5;color:#52525b}',
-    '.fdp-finish__amount{margin:1rem auto 0;display:inline-block;padding:.45rem 1rem;border-radius:999px;background:#f4f4f5;font-weight:800;font-variant-numeric:tabular-nums}',
-    '.fdp-finish__actions{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1.5rem}',
-    '.fdp-finish__btn{border:0;border-radius:999px;min-height:62px;font:800 1.1rem Manrope,system-ui,sans-serif;cursor:pointer}',
-    '.fdp-finish__btn--no{background:#f4f4f5;color:#27272a}',
-    '.fdp-finish__btn--yes{background:#16a34a;color:#fff;box-shadow:0 10px 24px rgba(22,163,74,.3)}',
-    '.fdp-finish__btn:disabled{opacity:.6;cursor:wait}',
-    '.fdp-finish__error{margin:.8rem 0 0;color:#b91c1c;font-weight:700;font-size:.95rem}',
-
     // Waarschuwing die uit het tijdblokje komt
     '.fdp-warn{position:fixed;right:1.25rem;z-index:9002;width:min(24rem,calc(100vw - 2.5rem));border-radius:1.25rem;',
     'background:#fff;color:#18181b;border:2px solid #f59e0b;box-shadow:0 24px 60px rgba(0,0,0,.3);padding:1.1rem 1.25rem 1.4rem;',
@@ -129,7 +102,7 @@
     '@keyframes fdpWarnBar{to{transform:scaleX(0)}}',
     // het tijdblokje geeft even een oranje gloed
     '.fdp-station-timer.fdp-timer-warn{box-shadow:0 0 0 3px #f59e0b,0 20px 50px rgba(245,158,11,.45)}',
-    '@media (prefers-reduced-motion:reduce){.fdp-warn,.fdp-done,.fdp-finish__card{transition:opacity .2s}.fdp-warn__icon{animation:none}}'
+    '@media (prefers-reduced-motion:reduce){.fdp-warn,.fdp-done{transition:opacity .2s}.fdp-warn__icon{animation:none}}'
   ].join('');
   document.head.appendChild(style);
 
@@ -160,50 +133,28 @@
     else doneButton.classList.remove('is-visible');
   }
 
-  function askFinish() {
-    const st = station();
-    const overlay = document.createElement('div');
-    overlay.className = 'fdp-finish';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    const cost = st ? euro(computeCost(timer.getElapsedMs(), st.pricing)) : '';
-    overlay.innerHTML = '<div class="fdp-finish__card">'
-      + '<div class="fdp-finish__icon">' + checkIcon + '</div>'
-      + '<p class="fdp-finish__title">' + t('confirmTitle') + '</p>'
-      + '<p class="fdp-finish__text">' + t('confirmText') + '</p>'
-      + (cost ? '<p class="fdp-finish__amount">' + mmss(timer.getElapsedMs()) + ' · ' + cost + '</p>' : '')
-      + '<p class="fdp-finish__error" hidden></p>'
-      + '<div class="fdp-finish__actions">'
-      + '<button type="button" class="fdp-finish__btn fdp-finish__btn--no">' + t('confirmNo') + '</button>'
-      + '<button type="button" class="fdp-finish__btn fdp-finish__btn--yes">' + t('confirmYes') + '</button>'
-      + '</div></div>';
-    document.body.appendChild(overlay);
-    requestAnimationFrame(function () { overlay.classList.add('is-open'); });
-
-    function close() {
-      overlay.classList.remove('is-open');
-      setTimeout(function () { overlay.remove(); }, 260);
+  // Eén tik: tijd stopt direct en de kiosk gaat op slot (geen bevestiging).
+  let finishing = false;
+  async function finishNow() {
+    if (finishing) return;
+    finishing = true;
+    doneButton.disabled = true;
+    try {
+      const response = await fetch('/station/finish/' + encodeURIComponent(folder), { method: 'POST' });
+      if (!response.ok && response.status !== 409) throw new Error('Status ' + response.status);
+      if (timer.refresh) await timer.refresh();
+    } catch (error) {
+      // Mislukt: korte melding op de knop zelf, daarna weer bruikbaar.
+      doneButton.dataset.lang = '';
+      doneButton.innerHTML = '<span>' + t('failed') + '</span>';
+      setTimeout(function () { doneButton.dataset.lang = ''; updateDoneButton(); }, 3500);
+    } finally {
+      finishing = false;
+      doneButton.disabled = false;
     }
-    overlay.querySelector('.fdp-finish__btn--no').addEventListener('click', close);
-    overlay.addEventListener('click', function (event) { if (event.target === overlay) close(); });
-    overlay.querySelector('.fdp-finish__btn--yes').addEventListener('click', async function () {
-      const yes = this;
-      yes.disabled = true;
-      try {
-        const response = await fetch('/station/finish/' + encodeURIComponent(folder), { method: 'POST' });
-        if (!response.ok && response.status !== 409) throw new Error('Status ' + response.status);
-        if (timer.refresh) await timer.refresh();
-        close();
-      } catch (error) {
-        const err = overlay.querySelector('.fdp-finish__error');
-        err.textContent = t('failed');
-        err.hidden = false;
-        yes.disabled = false;
-      }
-    });
   }
 
-  doneButton.addEventListener('click', askFinish);
+  doneButton.addEventListener('click', finishNow);
 
   function computeCost(elapsedMs, p) {
     const baseMs = p.baseMinutes * 60000;
